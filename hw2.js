@@ -164,7 +164,7 @@ function main() {
   var tick = function() {
 	  	
     currentAngle = animate(currentAngle);  // Update the rotation angle
-    currentAngle = 0; //TEST
+    //currentAngle = 0; //TEST
     // Calculate the model matrix
     modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
 	
