@@ -7,9 +7,9 @@ var VSHADER_SOURCE =
 'attribute vec4 a_Color;\n' +
 'varying vec4 v_Color;\n' + 
 'void main() {\n' + 
-'   gl_Position = a_Position;\n' + // Coordinates
-'   v_Color = a_Color;\n' + // pass the color to the fragment shader
-'   gl_PointSize = 5.0;\n' + // set point size
+'   gl_Position = a_Position;\n' +
+'   v_Color = a_Color;\n' + 
+'   gl_PointSize = 5.0;\n' +
 '}\n';
 
 // FRAGMENT SHADER
@@ -25,10 +25,8 @@ var FSHADER_SOURCE =
 function main() {
   // Creating the color picker GUI
   var gui = new dat.GUI();
-  var color = {color0:[255,0,0]};
-  gui.addColor(color,'color0').onFinishChange(function(value) {
-    //console.log(color.color0);
-    });
+  var color = {color0:[37,51,155]};
+  gui.addColor(color,'color0').name("Color");
 
 	// Prepare the WebGL environment
 	var canvas = document.getElementById('webgl');
@@ -69,7 +67,7 @@ function main() {
   }
 	
 	// specify the color for clearing <canvas>
-	gl.clearColor(0.0,0.0,0.0,1.0);
+	gl.clearColor(0.90,0.90,0.90,1.0);
 
 	// clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -88,7 +86,7 @@ function click(ev,gl,canvas,color) {
 	x = ((x - rect.left) - canvas.height/2)/(canvas.height/2);
 	y = (canvas.width/2 - (y - rect.top))/(canvas.width/2);
 
-	//store the coords in g_points array
+	//store the position in g_points array
   g_vertex.push(x); g_vertex.push(y);
   
   //Normalize colors as WebGL color range is [0:1] instead of [0:255]
@@ -100,9 +98,8 @@ function click(ev,gl,canvas,color) {
   //store the color in g_colors array
   g_vertex.push(red); g_vertex.push(green); g_vertex.push(blue);
 
-  gl.clear(gl.COLOR_BUFFER_BIT); //empty canvas outside the for loop to prevent existing points to be wiped
+  gl.clear(gl.COLOR_BUFFER_BIT); //clear canvas outside drawRectangle() to prevent existing elements to be wiped
 
-  //drawPoints(gl,a_Position,a_Color); //test
   drawRectangle(gl);
 }
 
@@ -124,7 +121,7 @@ function drawRectangle(gl) {
     var rectangleVertex = new Float32Array ([
       //    X         Y        |      R           G           B
       g_vertex[j+0],g_vertex[j+1],    g_vertex[j+2],g_vertex[j+3],g_vertex[j+4], //upper sx
-      g_vertex[j+5],g_vertex[j+1],    g_vertex[j+2],g_vertex[j+3],g_vertex[j+4],//g_vertex[j+2],g_vertex[j+3],g_vertex[j+4], //upper dx
+      g_vertex[j+5],g_vertex[j+1],    g_vertex[j+2],g_vertex[j+3],g_vertex[j+4], //upper dx
       g_vertex[j+0],g_vertex[j+6],    g_vertex[j+2],g_vertex[j+3],g_vertex[j+4],//g_vertex[j+7],g_vertex[j+8],g_vertex[j+9], //bottom sx
       g_vertex[j+5],g_vertex[j+6],    g_vertex[j+2],g_vertex[j+3],g_vertex[j+4]//g_vertex[j+7],g_vertex[j+8],g_vertex[j+9],  //bottom dx
   
@@ -169,9 +166,8 @@ function drawRectangle(gl) {
   }
 }
 
-function undoPoint(ev,gl,canvas) { //CTRL + Z
+function undoPoint(ev,gl,canvas) { //Remove a point from scene
   //console.log("Premuto ctrl+z");
   for (var i=0; i < 5; i++) g_vertex.pop();
-  //update scene
-  drawRectangle(gl);
+  
 }

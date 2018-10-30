@@ -1,4 +1,6 @@
 // hw2.js
+"use strict;"
+
 // Vertex shader program
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n'      + // Vertex coordinates
@@ -77,7 +79,7 @@ function main() {
     return;
   }
 
-  gui.addColor(colore,'color0').onFinishChange(function(value) {
+  gui.addColor(colore,'color0').name("color").onFinishChange(function(value) {
 	console.log(colore.color0);
   });
   //
@@ -358,7 +360,7 @@ function initVertexBuffersPentagon(gl) {
   1,0,0, //v0 rosso
   0,1,0, //v1 verde
   0,0,1, //v2 blu
-  1,1,1, //v3 bianco biango piango
+  1,1,1, //v3 bianco
   1,1,0 //v4 giallo 
   ];
 
@@ -374,7 +376,6 @@ function initVertexBuffersPentagon(gl) {
     
     //TEST gl.TRIANGLE_FAN
     0,1,2,3,4
-
   ]);
 
   // Write the vertex property to buffers (coordinates, colors and normals)
