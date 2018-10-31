@@ -281,7 +281,7 @@ function initVertexBuffersSquare(gl) {
 /************************************************************/
 function initVertexBuffersCircle(gl) {
   var p = [1.0, 0.0];
-  var n = 360;
+  var n = 100;
   var anglestep = 2* Math.PI / n;
 
   // Calculate points and colors
