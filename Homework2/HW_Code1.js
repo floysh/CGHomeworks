@@ -1,3 +1,4 @@
+"use strict";
 // hw2.js
 // Vertex shader program
 var VSHADER_SOURCE =
@@ -8,6 +9,7 @@ var VSHADER_SOURCE =
   'void main() {\n'                   +
   '  gl_Position = u_MvpMatrix * a_Position;\n' +
   '  v_Color = a_Color;\n' + 
+  '   gl_PointSize = 5.0;\n' +
   '}\n';
 //******************************************************************************************
 // Fragment shader program
@@ -20,12 +22,20 @@ var FSHADER_SOURCE =
   '  gl_FragColor = v_Color;\n' +
   '}\n';
 //*****************************************************************************************
+var gl,colore;
+var RENDERING_MODE;
+
 function main() {
+
+  colore = {color0:[45,0,255]}; //must be initialized before calling any initVertex function
+  //0,105,255
+
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
+  gl = getWebGLContext(canvas);
+  gl = WebGLDebugUtils.makeDebugContext(gl, throwOnGLError, logAndValidate); //enable debug
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -37,15 +47,8 @@ function main() {
     return;
   }
 
-  // 
-  var n = initVertexBuffers(gl);
-  if (n < 0) {
-    console.log('Failed to set the vertex information');
-    return;
-  }
-
   // Set the clear color and enable the depth test
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(0, 0, 0, 0.1);
   gl.enable(gl.DEPTH_TEST);
 
   // Get the storage locations of uniform variables and so on
@@ -56,7 +59,7 @@ function main() {
   }
 
   var vpMatrix = new Matrix4();   // View projection matrix
-  var camPos = new Vector3([0.0,3.0,6.0]);
+  var camPos = new Vector3([0.0, 3.0, 6.0]);
   // Calculate the view projection matrix
   vpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 1000);
   vpMatrix.lookAt(camPos.elements[0],camPos.elements[1],camPos.elements[2], 0, 0, 0, 0, 1, 0);
@@ -65,32 +68,46 @@ function main() {
   var modelMatrix = new Matrix4();  // Model matrix
   var mvpMatrix = new Matrix4();    // Model view projection matrix
   //*********************************************************************
+
+  // TEST FUNCTION
+  var n = initVertexBuffersCube(gl);
+  if (n < 0) {
+    console.log('Failed to set the vertex information');
+    return;
+  }
+
   // creo una GUI con dat.gui
   var gui = new dat.GUI();
+
+  //color picker
+  gui.addColor(colore,'color0').name("figure color").listen().onChange(function(value) {
+    for (var figure in geometria) {
+      if (geometria[figure] == true) {
+        var func2call = "initVertexBuffers"+figure.charAt(0).toUpperCase() + figure.slice(1); //retrive function name
+        window[func2call](gl); //calls a global function given its name
+      }
+    }
+  });
+
   // checkbox geometry
   var geometria = {cube:true,cone:false,cylinder:false,sphere:false,torus:false};
-  // color selector
-  var colore = {color0:[255,0,0]};
   //
-  gui.addColor(colore,'color0').onFinishChange(function(value) {
-	  console.log(value);
-  });
-  //
-  gui.add(geometria,'cube').onFinishChange(function(value) {
+  gui.add(geometria,'cube').listen().onFinishChange(function(value) {
     // Fires when a controller loses focus.
 	   if(value == true){
 		geometria.cube = value;
 		geometria.cone = false;
 		geometria.cylinder = false;
 		geometria.sphere = false;
-		geometria.torus = false;
+    geometria.torus = false;
+    n = initVertexBuffersCube(gl);
 	   }
 	   // Iterate over all controllers
        for (var i in gui.__controllers) {
           gui.__controllers[i].updateDisplay();
        }
    });
-  gui.add(geometria,'cone').onFinishChange(function(value) {
+  gui.add(geometria,'cone').listen().onFinishChange(function(value) {
     // Fires when a controller loses focus.
        // Fires when a controller loses focus.
 	   if(value == true){
@@ -98,14 +115,15 @@ function main() {
 		geometria.cone = value;
 		geometria.cylinder = false;
 		geometria.sphere = false;
-		geometria.torus = false;
+    geometria.torus = false;
+    n = initVertexBuffersCone(gl);
 	   }
 	   // Iterate over all controllers
        for (var i in gui.__controllers) {
           gui.__controllers[i].updateDisplay();
        }
    });
-  gui.add(geometria,'cylinder').onFinishChange(function(value) {
+  gui.add(geometria,'cylinder').listen().onFinishChange(function(value) {
     // Fires when a controller loses focus.
        // Fires when a controller loses focus.
 	   if(value == true){
@@ -113,14 +131,15 @@ function main() {
 		geometria.cone = false;
 		geometria.cylinder = value;
 		geometria.sphere = false;
-		geometria.torus = false;
+    geometria.torus = false;
+    n = initVertexBuffersCylinder(gl);
 	   }
 	   // Iterate over all controllers
        for (var i in gui.__controllers) {
           gui.__controllers[i].updateDisplay();
        }
    });
-  gui.add(geometria,'sphere').onFinishChange(function(value) {
+  gui.add(geometria,'sphere').listen().onFinishChange(function(value) {
     // Fires when a controller loses focus.
        // Fires when a controller loses focus.
 	   if(value == true){
@@ -128,14 +147,15 @@ function main() {
 		geometria.cone = false;
 		geometria.cylinder = false;
 		geometria.sphere = value;
-		geometria.torus = false;
+    geometria.torus = false;
+    n = initVertexBuffersSphere(gl);
 	   }
 	   // Iterate over all controllers
        for (var i in gui.__controllers) {
           gui.__controllers[i].updateDisplay();
        }
    });
-  gui.add(geometria,'torus').onFinishChange(function(value) {
+  gui.add(geometria,'torus').listen().onFinishChange(function(value) {
     // Fires when a controller loses focus.
        // Fires when a controller loses focus.
 	   if(value == true){
@@ -143,7 +163,8 @@ function main() {
 		geometria.cone = false;
 		geometria.cylinder = false;
 		geometria.sphere = false;
-		geometria.torus = value;
+    geometria.torus = value;
+    n = initVertexBuffersTorus(gl);
 	   }
 	   // Iterate over all controllers
        for (var i in gui.__controllers) {
@@ -151,13 +172,8 @@ function main() {
        }
    });
   //*********************************************************************************
+   RENDERING_MODE = gl.TRIANGLES;
   var tick = function() {
-	// read geometria
-	for(var x in geometria){
-		if(geometria[x] == true)
-			console.log(x);
-	}
-    	
     currentAngle = animate(currentAngle);  // Update the rotation angle
     // Calculate the model matrix
     modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
@@ -169,14 +185,17 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Draw the cube
-    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+    //gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
+    //gl.drawElements(gl.TRIANGLE_FAN, n, gl.UNSIGNED_SHORT, 0); //disegna sul piano sbagliato
+    gl.drawElements(RENDERING_MODE, n, gl.UNSIGNED_SHORT, 0); //test
+    //gl.drawElements(gl.POINTS, n, gl.UNSIGNED_SHORT, 0); //test
 
     requestAnimationFrame(tick, canvas); // Request that the browser ?calls tick
   };
   tick();
 }
 
-function initVertexBuffers(gl) {
+function initVertexBuffersCube(gl) {
   // Create a cube
   //    v6----- v5
   //   /|      /|
@@ -196,17 +215,16 @@ function initVertexBuffers(gl) {
   ]);
 
   // Colors
-  var colors = new Float32Array([    // Colors
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v1-v2-v3 front
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v3-v4-v5 right
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v5-v6-v1 up
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v1-v6-v7-v2 left
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v7-v4-v3-v2 down
-    1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0 　    // v4-v7-v6-v5 back
- ]);
+  var colors = [];
+  for (var i = 0; i < vertices.length; i++) {
+    colors.push(colore.color0[0] / 255); //red
+    colors.push(colore.color0[1] / 255); //green
+    colors.push(colore.color0[2] / 255); //blue
+  }
+  colors = new Float32Array(colors);
 
   // Indices of the vertices
-  var indices = new Uint8Array([
+  var indices = new Uint16Array([
      0, 1, 2,   0, 2, 3,    // front
      4, 5, 6,   4, 6, 7,    // right
      8, 9,10,   8,10,11,    // up
@@ -234,6 +252,173 @@ function initVertexBuffers(gl) {
   return indices.length;
 }
 
+var points,colors,indices;
+function initVertexBuffersCone(gl) {
+  var p = [1.0, -0.6, 0.6];
+  var spike = [0.0, 1.0, 0.0];
+  var n = 100;
+  var anglestep = 2* Math.PI / n;
+
+  // Calculate points and colors
+  colors = [];
+  points = [];
+  indices = [];
+
+  //SIDE
+  //push spike
+  points.push(spike[0]); points.push(spike[1]); points.push(spike[2]);
+  colors.push(1); //red
+  colors.push(0.5); //green
+  colors.push(0); //blue
+  //indices.push(0);
+  for (var i=0; i < n; i++) {
+    //Find base points coordinates rotating a known one by 360/n degrees each step
+    points.push( p[0] *Math.cos(i*anglestep) - p[2] *Math.sin(i*anglestep));
+    points.push(p[1]);
+    points.push( p[0] *Math.sin(i*anglestep) + p[2] *Math.cos(i*anglestep));
+    //Colors
+    colors.push(colore.color0[0] / 255); //red
+    colors.push(colore.color0[1] / 255); //green
+    colors.push(colore.color0[2] / 255); //blue
+    //Indexes
+    indices.push(0);
+    indices.push(i+1);
+    indices.push(i+2);
+  }
+  indices[indices.length-1] = 1;
+
+  //indices = []; //test base rendering
+
+
+  //BASE
+  //push base center
+  points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
+/*   colors.push(colore.color0[0] / 255); //red
+  colors.push(colore.color0[1] / 255); //green
+  colors.push(colore.color0[2] / 255); //blue */
+
+  //TRIANGLE ORDER TEST
+  colors.push(1); //red
+  colors.push(0); //green
+  colors.push(0); //blue
+
+  for (var i=1; i <=n; i++) {
+      indices.push(n+1); //base center position
+      indices.push(i);
+      indices.push(i+1);
+  }
+  indices[indices.length-1] = 1; //join last triangle with the first one
+
+  points = new Float32Array(points);
+  colors = new Float32Array(colors);
+  var pindices = new Uint16Array(indices);
+
+  // Write the vertex property to buffers (coordinates, colors and normals)
+  if (!initArrayBuffer(gl, 'a_Position', points, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, 'a_Color'   , colors  , 3, gl.FLOAT)) return -1;
+ 
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return false;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, pindices, gl.STATIC_DRAW);
+
+return indices.length;
+}
+
+function initVertexBuffersCylinder(gl) {
+  var p = [1.0, -0.6, 0.6];
+  var spike = [0.0, 1.0, 0.0];
+  var n = 100;
+  var anglestep = 2* Math.PI / n;
+
+  // Calculate points and colors
+  colors = [];
+  points = [];
+  indices = [];
+
+  //SIDE
+  //push spike
+  points.push(spike[0]); points.push(spike[1]); points.push(spike[2]);
+  colors.push(colore.color0[0] / 255); //red
+  colors.push(colore.color0[1] / 255); //green
+  colors.push(colore.color0[2] / 255); //blue
+  //indices.push(0);
+  for (var i=0; i < n; i++) {
+    //Find base points coordinates rotating a known one by 360/n degrees each step
+    points.push( p[0] *Math.cos(i*anglestep) - p[2] *Math.sin(i*anglestep));
+    points.push(spike[1]);
+    points.push( p[0] *Math.sin(i*anglestep) + p[2] *Math.cos(i*anglestep));
+    //Colors
+    colors.push(colore.color0[0] / 255); //red
+    colors.push(colore.color0[1] / 255); //green
+    colors.push(colore.color0[2] / 255); //blue
+    //Indexes
+    indices.push(0);
+    indices.push(i+1);
+    indices.push(i+2);
+  }
+  indices[indices.length-1] = 1;
+
+  //indices = []; //test base rendering
+
+
+  //BASES
+  //push bottom base center
+  points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
+  colors.push(colore.color0[0] / 255); //red
+  colors.push(colore.color0[1] / 255); //green
+  colors.push(colore.color0[2] / 255); //blue
+
+  /*//TRIANGLE ORDER TEST
+  colors.push(1); //red
+  colors.push(0); //green
+  colors.push(0); //blue */
+
+  for (var i=1; i <=n; i++) {
+      indices.push(n+1); //base center position
+      indices.push(i);
+      indices.push(i+1);
+  }
+  indices[indices.length-1] = 1; //join last triangle with the first one
+
+  //push upper base center
+
+
+
+  //SEND TO SHADERS
+  points = new Float32Array(points);
+  colors = new Float32Array(colors);
+  var pindices = new Uint16Array(indices);
+
+  // Write the vertex property to buffers (coordinates, colors and normals)
+  if (!initArrayBuffer(gl, 'a_Position', points, 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, 'a_Color'   , colors  , 3, gl.FLOAT)) return -1;
+ 
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return false;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, pindices, gl.STATIC_DRAW);
+
+return indices.length;
+}
+
+
+
+
 function initArrayBuffer(gl, attribute, data, num, type) {
   // Create a buffer object
   var buffer = gl.createBuffer();
@@ -257,7 +442,7 @@ function initArrayBuffer(gl, attribute, data, num, type) {
 }
 
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 5.0;
+var ANGLE_STEP = 120.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
@@ -268,4 +453,35 @@ function animate(angle) {
   // Update the current rotation angle (adjusted by the elapsed time)
   var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle %= 360;
+}
+
+
+
+
+
+//////////////////////////////////////
+//DEBUG///////////////////////////////
+//////////////////////////////////////
+
+function throwOnGLError(err, funcName, args) {
+  throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName;
+};
+
+function validateNoneOfTheArgsAreUndefined(functionName, args) {
+  for (var ii = 0; ii < args.length; ++ii) {
+    if (args[ii] === undefined) {
+      console.error("undefined passed to gl." + functionName + "(" +
+                     WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+    }
+  }
+}
+
+function logGLCall(functionName, args) {   
+  console.log("gl." + functionName + "(" + 
+     WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");   
+}
+
+function logAndValidate(functionName, args) {
+  logGLCall(functionName, args);
+  validateNoneOfTheArgsAreUndefined (functionName, args);
 }
