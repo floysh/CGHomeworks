@@ -27,18 +27,18 @@ var RENDERING_MODE;
 
 function main() {
   // creo una GUI con dat.gui
-  var gui = new dat.GUI();
+  //var gui = new dat.GUI();
 
   //color picker
   colore = {color0:[0,120,255]}; //must be initialized before calling any initVertex function
-  gui.addColor(colore,'color0').name("figure color").listen().onChange(function(value) {
+/*   gui.addColor(colore,'color0').name("figure color").listen().onChange(function(value) {
     for (var figure in geometria) {
       if (geometria[figure] == true) {
         var func2call = "initVertexBuffers"+figure.charAt(0).toUpperCase() + figure.slice(1); //retrive function name
         window[func2call](gl); //calls a global function given its name
       }
     }
-  });
+  }); */
 
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
