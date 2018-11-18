@@ -24,6 +24,7 @@ var FSHADER_SOURCE =
 //*****************************************************************************************
 var gl,colore;
 var RENDERING_MODE;
+var TEST = true;
 
 function main() {
 
@@ -59,7 +60,7 @@ function main() {
   }
 
   var vpMatrix = new Matrix4();   // View projection matrix
-  var camPos = new Vector3([0.0, 3.0, 6.0]);
+  var camPos = new Vector3([0.0, 6.2, 6.0]);
   // Calculate the view projection matrix
   vpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 1000);
   vpMatrix.lookAt(camPos.elements[0],camPos.elements[1],camPos.elements[2], 0, 0, 0, 0, 1, 0);
@@ -70,7 +71,8 @@ function main() {
   //*********************************************************************
 
   // TEST FUNCTION
-  var n = initVertexBuffersCube(gl);
+  if (TEST) var n = initVertexBuffersCylinder(gl);
+  else var n = initVertexBuffersCube(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -188,7 +190,7 @@ function main() {
     //gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
     //gl.drawElements(gl.TRIANGLE_FAN, n, gl.UNSIGNED_SHORT, 0); //disegna sul piano sbagliato
     gl.drawElements(RENDERING_MODE, n, gl.UNSIGNED_SHORT, 0); //test
-    //gl.drawElements(gl.POINTS, n, gl.UNSIGNED_SHORT, 0); //test
+    gl.drawElements(gl.POINTS, n, gl.UNSIGNED_SHORT, 0); //test
 
     requestAnimationFrame(tick, canvas); // Request that the browser ?calls tick
   };
@@ -255,7 +257,7 @@ function initVertexBuffersCube(gl) {
 var points,colors,indices;
 function initVertexBuffersCone(gl) {
   var p = [1.0, -0.6, 0.6];
-  var spike = [0.0, 1.0, 0.0];
+  var spike = [0.0, 1.5, 0.0];
   var n = 100;
   var anglestep = 2* Math.PI / n;
 
@@ -267,9 +269,17 @@ function initVertexBuffersCone(gl) {
   //SIDE
   //push spike
   points.push(spike[0]); points.push(spike[1]); points.push(spike[2]);
-  colors.push(1); //red
-  colors.push(0.5); //green
-  colors.push(0); //blue
+  if (TEST) {
+    //TRIANGLE ORDER TEST
+    colors.push(1); //red
+    colors.push(0.5); //green
+    colors.push(0); //blue
+  }
+  else {
+    colors.push(colore.color0[0] / 255); //red
+    colors.push(colore.color0[1] / 255); //green
+    colors.push(colore.color0[2] / 255); //blue
+  }
   //indices.push(0);
   for (var i=0; i < n; i++) {
     //Find base points coordinates rotating a known one by 360/n degrees each step
@@ -293,14 +303,17 @@ function initVertexBuffersCone(gl) {
   //BASE
   //push base center
   points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
-/*   colors.push(colore.color0[0] / 255); //red
-  colors.push(colore.color0[1] / 255); //green
-  colors.push(colore.color0[2] / 255); //blue */
-
-  //TRIANGLE ORDER TEST
-  colors.push(1); //red
-  colors.push(0); //green
-  colors.push(0); //blue
+  if (TEST) {
+    //TRIANGLE ORDER TEST
+    colors.push(0); //red
+    colors.push(1); //green
+    colors.push(0); //blue
+  }
+  else {
+    colors.push(colore.color0[0] / 255); //red
+    colors.push(colore.color0[1] / 255); //green
+    colors.push(colore.color0[2] / 255); //blue
+  }
 
   for (var i=1; i <=n; i++) {
       indices.push(n+1); //base center position
@@ -333,66 +346,115 @@ return indices.length;
 }
 
 function initVertexBuffersCylinder(gl) {
-  var p = [1.0, -0.6, 0.6];
-  var spike = [0.0, 1.0, 0.0];
+  var p = [1.0, -0.6, 0.6]; //bottom base start point
+  var bottomcenter = [0.0, p[1], 0.0];
+  var h = 1.0;
+  
   var n = 100;
   var anglestep = 2* Math.PI / n;
 
   // Calculate points and colors
+  var normalizedcolor = {"red": colore.color0[0] / 255, "green": colore.color0[1] / 255, "blue": colore.color0[2] / 255};
   colors = [];
   points = [];
   indices = [];
 
-  //SIDE
-  //push spike
-  points.push(spike[0]); points.push(spike[1]); points.push(spike[2]);
-  colors.push(colore.color0[0] / 255); //red
-  colors.push(colore.color0[1] / 255); //green
-  colors.push(colore.color0[2] / 255); //blue
-  //indices.push(0);
+  //push bottom base center
+  points.push(bottomcenter[0]); points.push(bottomcenter[1]); points.push(bottomcenter[2]);
+  if (TEST) {
+    //TRIANGLE ORDER TEST
+    colors.push(1); //red
+    colors.push(0.5); //green
+    colors.push(0); //blue
+  } else {
+    colors.push(normalizedcolor.red);
+    colors.push(normalizedcolor.green);
+    colors.push(normalizedcolor.blue);
+  }
+
+  var x,y,z;
+
   for (var i=0; i < n; i++) {
-    //Find base points coordinates rotating a known one by 360/n degrees each step
-    points.push( p[0] *Math.cos(i*anglestep) - p[2] *Math.sin(i*anglestep));
-    points.push(spike[1]);
-    points.push( p[0] *Math.sin(i*anglestep) + p[2] *Math.cos(i*anglestep));
-    //Colors
+    //Find bottom base points coordinates rotating a known one by 360/n degrees each step
+    x = p[0] *Math.cos(i*anglestep) - p[2] *Math.sin(i*anglestep);
+    y = p[1];
+    z = p[0] *Math.sin(i*anglestep) + p[2] *Math.cos(i*anglestep);
+    
+    //add bottom base points
+    points.push(x); points.push(y); points.push(z);
+    colors.push(normalizedcolor.red);
+    colors.push(normalizedcolor.green);
+    colors.push(normalizedcolor.blue);
+
+    //add upper base points
+    points.push(x); points.push(y+h); points.push(z);
+    colors.push(normalizedcolor.red);
+    colors.push(normalizedcolor.green);
+    colors.push(normalizedcolor.blue);
+    
+    //Indexes
+    //bases triangle(s)
+    if (i > 0) { //add indices only after having a complete side rectangle (2 iterations for the first triangle, 1 for others)
+      //bottom base
+      indices.push(0);
+      indices.push(2*i-1);
+      indices.push(2*i+1);
+      //upper base
+      indices.push(2*n+1);
+      indices.push(2*i);
+      indices.push(2*i+2);
+    }
+  }
+  
+  //side triangle(s)
+  for (i=0; i<=2*n; i++) {
+    /* //lower side triangles
+    indices.push(i*2+1);
+    indices.push(i*2+2);
+    indices.push((i*2+3) % (2*n));
+    
+    //upper side triangles
+    indices.push((i*2+2) % (2*n));
+    indices.push((i*2+4) % (2*n));
+    indices.push((i*2+3) % (2*n)); */
+    if (i+1 <= 2*n) indices.push(i+1);
+    if (i+2 <= 2*n) indices.push(i+2);
+    if (i+3 <= 2*n) indices.push(i+3);
+  }
+  //push missing triangles
+  indices.push(0); indices.push(2*n-1); indices.push(1);    //missing bottom base triangle
+  indices.push(2*n+1); indices.push(2*n); indices.push(2);  //missing top base triangle
+  indices.push(2*n-1); indices.push(1); indices.push(2);    //missing bottom side triangle
+  indices.push(2* n-1); indices.push(2*n); indices.push(2); //missing top side triangle
+  
+
+/*   indices = [
+    1,2,3,
+    2,3,4,
+    3,4,5, 
+    4,5,6, 
+    5,6,7, 
+    6,7,8, 
+    
+    7,1,2, 
+    7,8,2]; */
+    //indices.push(7); indices.push(1); indices.push(2);
+
+  //push upper base center
+  points.push(bottomcenter[0]); points.push(bottomcenter[1]+h); points.push(bottomcenter[2]);
+  if (TEST) {
+    //TRIANGLE ORDER TEST
+    colors.push(0); //red
+    colors.push(1); //green
+    colors.push(0); //blue
+  } else {
     colors.push(colore.color0[0] / 255); //red
     colors.push(colore.color0[1] / 255); //green
     colors.push(colore.color0[2] / 255); //blue
-    //Indexes
-    indices.push(0);
-    indices.push(i+1);
-    indices.push(i+2);
   }
-  indices[indices.length-1] = 1;
-
-  //indices = []; //test base rendering
 
 
-  //BASES
-  //push bottom base center
-  points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
-  colors.push(colore.color0[0] / 255); //red
-  colors.push(colore.color0[1] / 255); //green
-  colors.push(colore.color0[2] / 255); //blue
-
-  /*//TRIANGLE ORDER TEST
-  colors.push(1); //red
-  colors.push(0); //green
-  colors.push(0); //blue */
-
-  for (var i=1; i <=n; i++) {
-      indices.push(n+1); //base center position
-      indices.push(i);
-      indices.push(i+1);
-  }
-  indices[indices.length-1] = 1; //join last triangle with the first one
-
-  //push upper base center
-
-
-
-  //SEND TO SHADERS
+  //Send data to shaders
   points = new Float32Array(points);
   colors = new Float32Array(colors);
   var pindices = new Uint16Array(indices);
@@ -442,7 +504,7 @@ function initArrayBuffer(gl, attribute, data, num, type) {
 }
 
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 120.0;
+var ANGLE_STEP = 150.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
