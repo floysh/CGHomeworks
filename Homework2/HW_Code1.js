@@ -1,7 +1,6 @@
-"use strict";
 // hw2.js
 // Vertex shader program
-
+"use strict";
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n'      + // Vertex coordinates
   'attribute vec4 a_Color;\n'  +        // Vertex Color 
@@ -23,9 +22,9 @@ var FSHADER_SOURCE =
   '  gl_FragColor = v_Color;\n' +
   '}\n';
 //*****************************************************************************************
-var gl,colore;
-var RENDERING_MODE;
-var TEST = true;
+var gl = null, colore = null;
+var RENDERING_MODE = null;
+var TEST = false;
 
 function main() {
 
@@ -61,7 +60,7 @@ function main() {
   }
 
   var vpMatrix = new Matrix4();   // View projection matrix
-  var camPos = new Vector3([0.0, 6.2, 6.0]);
+  var camPos = new Vector3([0.0, 3.0, 6.0]);
   // Calculate the view projection matrix
   vpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 1000);
   vpMatrix.lookAt(camPos.elements[0],camPos.elements[1],camPos.elements[2], 0, 0, 0, 0, 1, 0);
@@ -72,7 +71,7 @@ function main() {
   //*********************************************************************
 
   // TEST FUNCTION
-  if (TEST) var n = initVertexBuffersSphere(gl);
+  if (TEST) var n = initVertexBuffersTorus(gl);
   else var n = initVertexBuffersCube(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
@@ -93,7 +92,7 @@ function main() {
   });
 
   // checkbox geometry
-  if (TEST) var geometria = {cube:false,cone:false,cylinder:false,sphere:true,torus:false};
+  if (TEST) var geometria = {cube:false,cone:false,cylinder:false,sphere:false,torus:true};
   else var geometria = {cube:true,cone:false,cylinder:false,sphere:false,torus:false};
   //
   gui.add(geometria,'cube').listen().onFinishChange(function(value) {
@@ -176,7 +175,8 @@ function main() {
        }
    });
   //*********************************************************************************
-   RENDERING_MODE = gl.LINE_STRIP;
+  if (TEST) RENDERING_MODE = gl.LINE_STRIP;
+  else RENDERING_MODE = gl.TRIANGLES;
   var tick = function() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
     // Calculate the model matrix
@@ -219,10 +219,15 @@ function initVertexBuffersCube(gl) {
 
   // Colors
   var colors = [];
+  var normColor = {
+    "red": colore.color0[0] / 255, 
+    "green": colore.color0[1] / 255, 
+    "blue": colore.color0[2] / 255
+  };
   for (var i = 0; i < vertices.length; i++) {
-    colors.push(colore.color0[0] / 255); //red
-    colors.push(colore.color0[1] / 255); //green
-    colors.push(colore.color0[2] / 255); //blue
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
   }
   colors = new Float32Array(colors);
 
@@ -255,7 +260,7 @@ function initVertexBuffersCube(gl) {
   return indices.length;
 }
 
-var points,colors,indices;
+var points = [],colors = [],indices = []; //test
 function initVertexBuffersCone(gl) {
   var p = [1.0, -0.6, 0.6];
   var spike = [0.0, 1.5, 0.0];
@@ -266,6 +271,11 @@ function initVertexBuffersCone(gl) {
   var colors = [];
   var points = [];
   var indices = [];
+  var normColor = {
+    "red": colore.color0[0] / 255, 
+    "green": colore.color0[1] / 255, 
+    "blue": colore.color0[2] / 255
+  };
 
   //SIDE
   //push spike
@@ -275,22 +285,21 @@ function initVertexBuffersCone(gl) {
     colors.push(1); //red
     colors.push(0.5); //green
     colors.push(0); //blue
+  } else {
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
   }
-  else {
-    colors.push(colore.color0[0] / 255); //red
-    colors.push(colore.color0[1] / 255); //green
-    colors.push(colore.color0[2] / 255); //blue
-  }
-  //indices.push(0);
+  
   for (var i=0; i < n; i++) {
     //Find base points coordinates rotating a known one by 360/n degrees each step
     points.push( p[0] *Math.cos(i*angleStep) - p[2] *Math.sin(i*angleStep));
     points.push(p[1]);
     points.push( p[0] *Math.sin(i*angleStep) + p[2] *Math.cos(i*angleStep));
     //Colors
-    colors.push(colore.color0[0] / 255); //red
-    colors.push(colore.color0[1] / 255); //green
-    colors.push(colore.color0[2] / 255); //blue
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
     //Indexes
     indices.push(0);
     indices.push(i+1);
@@ -300,7 +309,6 @@ function initVertexBuffersCone(gl) {
 
   //indices = []; //test base rendering
 
-
   //BASE
   //push base center
   points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
@@ -309,11 +317,10 @@ function initVertexBuffersCone(gl) {
     colors.push(0); //red
     colors.push(1); //green
     colors.push(0); //blue
-  }
-  else {
-    colors.push(colore.color0[0] / 255); //red
-    colors.push(colore.color0[1] / 255); //green
-    colors.push(colore.color0[2] / 255); //blue
+  } else {
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
   }
 
   for (var i=1; i <=n; i++) {
@@ -349,16 +356,20 @@ return indices.length;
 function initVertexBuffersCylinder(gl) {
   var p = [1.0, -0.6, 0.6]; //bottom base start point
   var bottomcenter = [0.0, p[1], 0.0];
-  var h = 1.0;
+  var h = 1.4;
   
   var n = 100;
   var angleStep = 2* Math.PI / n;
 
   // Calculate points and colors
-  var normalizedcolor = {"red": colore.color0[0] / 255, "green": colore.color0[1] / 255, "blue": colore.color0[2] / 255};
-  colors = [];
-  points = [];
-  indices = [];
+  var normColor = {
+    "red": colore.color0[0] / 255, 
+    "green": colore.color0[1] / 255, 
+    "blue": colore.color0[2] / 255
+  };
+  var colors = [];
+  var points = [];
+  var indices = [];
   var x,y,z;
 
   //push bottom base center
@@ -369,9 +380,9 @@ function initVertexBuffersCylinder(gl) {
     colors.push(0.5); //green
     colors.push(0); //blue
   } else {
-    colors.push(normalizedcolor.red);
-    colors.push(normalizedcolor.green);
-    colors.push(normalizedcolor.blue);
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
   }
 
   for (var i=0; i < n; i++) {
@@ -382,15 +393,15 @@ function initVertexBuffersCylinder(gl) {
     
     //add bottom base points
     points.push(x); points.push(y); points.push(z);
-    colors.push(normalizedcolor.red);
-    colors.push(normalizedcolor.green);
-    colors.push(normalizedcolor.blue);
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
 
     //add upper base points
     points.push(x); points.push(y+h); points.push(z);
-    colors.push(normalizedcolor.red);
-    colors.push(normalizedcolor.green);
-    colors.push(normalizedcolor.blue);
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
     
     //Indexes
     //bases triangle(s)
@@ -435,9 +446,9 @@ function initVertexBuffersCylinder(gl) {
     colors.push(1); //green
     colors.push(0); //blue
   } else {
-    colors.push(colore.color0[0] / 255); //red
-    colors.push(colore.color0[1] / 255); //green
-    colors.push(colore.color0[2] / 255); //blue
+    colors.push(normColor.red);
+    colors.push(normColor.green);
+    colors.push(normColor.blue);
   }
 
 
@@ -474,10 +485,14 @@ function initVertexBuffersSphere(gl) {
 
   // Calculate points and colors
   var angleStep = 2* Math.PI / n;
-  var normColor = {"red": colore.color0[0] / 255, "green": colore.color0[1] / 255, "blue": colore.color0[2] / 255};
-  colors = [];
-  points = [];
-  indices = [];
+  var normColor = {
+    "red": colore.color0[0] / 255, 
+    "green": colore.color0[1] / 255, 
+    "blue": colore.color0[2] / 255
+  };
+  var colors = [];
+  var points = [];
+  var indices = [];
   var x,y,z;
   
   // Vertices & Colors
@@ -546,8 +561,70 @@ function initVertexBuffersSphere(gl) {
 }
 
 function initVertexBuffersTorus(gl) {
+  var Rhole = 1.0;
+  var r = 0.3;
+  var n = 60;
 
-  return 0;
+  // Calculate points and colors
+  var angleStep = 2* Math.PI / n;
+  var normColor = {"red": colore.color0[0] / 255, "green": colore.color0[1] / 255, "blue": colore.color0[2] / 255};
+  var colors = [];
+  var points = [];
+  var indices = [];
+  var x,y,z;
+  
+  // Vertices & Colors
+  for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
+    var angleTHETA = i * angleStep;
+    var sinTHETA = Math.sin(angleTHETA);
+    var cosTHETA = Math.cos(angleTHETA);
+    for (var j = 0; j <= n; j++) { //rotazione pti anello
+      var anglePHI = j * angleStep;
+      var sinPHI = Math.sin(anglePHI);
+      var cosPHI = Math.cos(anglePHI);
+
+      //cono da palestra divelto
+      x = (Rhole + r * cosPHI) * cosTHETA;
+      y = (Rhole + r * cosPHI) * sinTHETA;
+      z = r * sinPHI;
+
+      points.push(x); points.push(y); points.push(z);
+
+      colors.push(normColor.red);
+      colors.push(normColor.green);
+      colors.push(normColor.blue);
+
+      //indices.push(i*n+j) //test punti
+      //Indices
+      var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
+      var p2 = p1 + (n+1); //pto sopra a p1 = analogo a p1 nello strato successivo
+
+      if (i < n && j < n) { //mi fermo prima sennò drawElements va fuori dal buffer
+        indices.push(p1); indices.push(p2); indices.push(p1 + 1);
+        indices.push(p1 + 1); indices.push(p2); indices.push(p2 + 1);
+      }
+    }
+  }
+
+
+  //Send data to shaders
+  // Write the vertex property to buffers (coordinates, colors and normals)
+  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), 3, gl.FLOAT)) return -1;
+  if (!initArrayBuffer(gl, 'a_Color'   , new Float32Array(colors)  , 3, gl.FLOAT)) return -1;
+   
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return false;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+  
+  return indices.length;
 }
 
 /*-----------------------------------------------------------*/
