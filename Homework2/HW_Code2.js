@@ -71,8 +71,9 @@ function main() {
     return;
   }
 
+  //TEST FUNZIONE
   // Set the vertex coordinates, the color and the normal
-  var n = initVertexBuffersCube(gl);
+  var n = initVertexBuffersCylinder(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -214,7 +215,7 @@ function main() {
 	currentAngle = animate(currentAngle);  // Update the rotation angle
  	
 	// Calculate the model matrix
-	modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
+   modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
 
 	// Pass the model matrix to u_ModelMatrix
 	gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
@@ -279,6 +280,7 @@ function initVertexBuffersCube(gl) {
     20,21,22,  20,22,23     // back
  ]);
 
+
   // Write the vertex property to buffers (coordinates and normals)
   // Same data can be used for vertex and normal
   // In order to make it intelligible, another buffer is prepared separately
@@ -299,6 +301,194 @@ function initVertexBuffersCube(gl) {
 
   return indices.length;
 }
+
+var points = [], normals = [], indices = []; 
+
+function initVertexBuffersOLD(gl) {
+   var p = [1.0, -0.6, 0.6]; //bottom base start point
+   var bottomcenter = [0.0, p[1], 0.0];
+   var h = 1.4;
+   
+   var n = 5;
+   var angleStep = 2* Math.PI / n;
+ 
+   points = [];
+   normals = [];
+   indices = [];
+   var x,y,z,lunghezza;
+ 
+
+   //push bottom base center
+   points.push(bottomcenter[0]); points.push(bottomcenter[1]); points.push(bottomcenter[2]);
+   normals.push(0.0); normals.push(0.0); normals.push(-1.0);
+   
+   for (var i=0; i < n; i++) { //calculate all points
+     x = p[0] *Math.cos(i*angleStep) - p[2] *Math.sin(i*angleStep);
+     y = p[1];
+     z = p[0] *Math.sin(i*angleStep) + p[2] *Math.cos(i*angleStep);
+
+     lunghezza = Math.sqrt(x*x + y*y +z*z);
+
+     points.push(x); points.push(y); points.push(z); //bottom base
+     points.push(x); points.push(y+h); points.push(z); //top base
+
+     //bases normals
+     normals.push(0.0); normals.push(-1.0); normals.push(0.0); //bottom base normal
+     normals.push(0.0); normals.push(1.0); normals.push(0.0); //top base normal
+     
+     //BASE Indices
+     //bases triangle(s)
+     if (i > 0) { //add indices only after having a complete side rectangle (2 iterations for the first triangle, 1 for others)
+       //bottom base
+       indices.push(0);
+       indices.push(2*i-1);
+       indices.push(2*i+1);
+       //upper base
+       indices.push(2*n+1);
+       indices.push(2*i);
+       indices.push(2*i+2);
+     }
+   }
+
+   c = [bottomcenter[0], bottomcenter[1] + h/2, bottomcenter[2]];
+   
+   //SIDE Indices and Normals
+   for (i=0; i<=2*n+1; i++) {
+     if (i+1 <= 2*n) indices.push(i+1);
+     if (i+2 <= 2*n) indices.push(i+2);
+     if (i+3 <= 2*n) indices.push(i+3);
+
+      normals.push(Math.sin(i*angleStep));
+      normals.push(0.0);
+      normals.push(Math.cos(i*angleStep));
+
+   }
+
+   //push upper base center
+   points.push(bottomcenter[0]); points.push(bottomcenter[1]+h); points.push(bottomcenter[2]);
+   normals.push(0.0); normals.push(0.0); normals.push(1.0);
+
+   //push missing triangles
+   indices.push(0); indices.push(2*n-1); indices.push(1);    //missing bottom base triangle
+   indices.push(2*n+1); indices.push(2*n); indices.push(2);  //missing top base triangle
+   indices.push(2*n-1); indices.push(1); indices.push(2);    //missing bottom side triangle
+   indices.push(2* n-1); indices.push(2*n); indices.push(2); //missing top side triangle
+   
+/*    for (var i=0; i<3; i++) normals.pop();
+   normals.push(0.0); normals.push(0.0); normals.push(-1.0); */
+
+ 
+   // Write the vertex property to buffers (coordinates and normals)
+   // Same data can be used for vertex and normal
+   // In order to make it intelligible, another buffer is prepared separately
+   if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
+   if (!initArrayBuffer(gl, 'a_Normal'  , new Float32Array(normals)  , gl.FLOAT, 3)) return -1;
+  
+   // Unbind the buffer object
+   gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+   // Write the indices to the buffer object
+   var indexBuffer = gl.createBuffer();
+   if (!indexBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+   }
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+   return indices.length;
+ }
+
+function initVertexBuffersCylinder(gl) {
+   var n = 70;
+   var r = 1.0;
+   var h = 1.4;
+
+	var vertices = [];
+   var normals = [];
+   var indices = [];
+   
+   var angleStep = 2 * Math.PI / n;
+   var bc = [0.0, 0.0, 0.0];//bottom centre: it shares x and z components with the top centre
+
+   //BASES
+	//bottom
+	vertices.push(bc[0], bc[1], bc[2]); //bottom centre
+	normals.push(0.0, -1.0, 0.0);
+	for(var i = 0; i <= n; i++) { //bottom vertexes
+      angle = i * angleStep;
+      
+		vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
+		normals.push(0.0, -1.0, 0.0);
+	} 
+
+   //top
+	vertices.push(bc[0], bc[1] + h, bc[2]); //top centre
+   normals.push(0.0, 1.0, 0.0);
+	for(var i = 0; i <= n; i++) { //top vertexes
+      angle = i * angleStep;
+      
+		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
+		normals.push(0.0, 1.0, 0.0);
+	} 
+
+
+   //SIDE
+   //duplicated vertices are needed as WebGL associate a normal to the point in the same position in the buffer object
+   for(var i = 0; i <= n; i++) {
+      angle = i * angleStep;
+
+		//bottom
+      vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
+		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
+
+		//top
+      vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
+		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
+	} 
+
+
+	//INDICES
+	//bottom surface
+	for (var i = 0; i < n; i++) {
+      indices.push(0, i+1, i+2);
+   }
+	indices.push(0, 1, n+1);
+
+	//top surface
+	ipsopra = n+2;
+	for(var i = 0; i < n; i++) {
+      indices.push(n+2, i+n+3, i+n+4);
+   }
+	indices.push(n+2, n+3, (2*n)+3);
+
+   //side surface links
+   var rep_offset = (n+2)*2;
+	for (i=0; i < 2*n; i++) {
+      indices.push(i+(n+2)*2, i+(n+2)*2 +1, i+(n+2)*2 +2);
+   }
+
+
+   //SEND DATA TO SHADERS
+	// Write the vertex property to buffers (coordinates and normals)
+	if(!initArrayBuffer(gl, 'a_Position', new Float32Array(vertices), gl.FLOAT, 3)) return -1;
+   if(!initArrayBuffer(gl, 'a_Normal',   new Float32Array(normals),  gl.FLOAT, 3)) return -1;
+   
+	// Unbind the buffer object
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+	// Write the indices to the buffer object
+	var indexBuffer=gl.createBuffer();
+	if(!indexBuffer) {
+		console.log('Failed to create the buffer object');
+		return false;
+	}
+
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+	return indices.length;
+}
+
 
 function initArrayBuffer(gl, attribute, data, type, num) {
   // Create a buffer object
@@ -325,7 +515,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
   return true;
 }
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 20.0;
+var ANGLE_STEP = 100.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
@@ -336,4 +526,20 @@ function animate(angle) {
   // Update the current rotation angle (adjusted by the elapsed time)
   var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle %= 360;
+}
+
+function normalize(vertices) {
+   var n = [0,0,0], normals = [];
+   for (var i=0; i < vertices.length - 3; i++) {
+      var a = i;
+      var b = i + 2;
+      var c = i + 3;
+
+      n[0] = (b[1]-a[1]) * (c[2]-b[2]) - (b[2]-a[2]) * (c[1]-b[1]);
+      n[1] = (b[2]-a[2]) * (c[0]-b[0]) - (b[0]-a[0]) * (c[2]-b[2]);
+      n[2] = (b[0]-a[0]) * (c[1]-b[1]) - (b[1]-a[1]) * (c[0]-b[0]);
+
+      normals.push(n[0]); normals.push(n[1]); normals.push(n[2]);
+   }
+   return normals;
 }
