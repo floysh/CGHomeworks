@@ -127,76 +127,232 @@ function main() {
   // creo una GUI con dat.gui
   var gui = new dat.GUI();
   // checkbox geometry
-  var materiali = {brass:true,emerald:false,bronze:false,jade:false,gold:false};
+  var materiali = {
+     emerald:false,
+     jade:false,
+     obsidian:false,
+     pearl:false,
+     ruby:false,
+     turquoise:false,
+     brass:true,
+     chrome:false,
+     copper:false,
+     bronze:false,
+     silver:false,
+     gold:false
+   };
   //
-  gui.add(materiali,'brass').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-	   if(value == true){
-		for(var i in materiali)
-			materiali[i]=false;
-		materiali.brass=true;
-		console.log("brass");
-	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
-   });
-  gui.add(materiali,'emerald').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
+   gui.add(materiali,'emerald').onFinishChange(function(value) {
        // Fires when a controller loses focus.
 	   if(value == true){
-		for(var i in materiali)
-			materiali[i]=false;
-		materiali.emerald=true;
-		console.log("emerald");
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.0215, 0.1745, 0.0215);
+         gl.uniform3f(u_DiffuseMat, 0.07568, 0.61424, 0.07568);
+         gl.uniform3f(u_SpecularMat, 0.633, 0.727811, 0.633);
+         gl.uniform1f(u_Shininess, 0.6*128);
+         //Update GUI   
+         for(var i in materiali) materiali[i]=false;
+         materiali.emerald=true;
+         console.log("emerald");
 	   }
 	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
    });
-  gui.add(materiali,'bronze').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
+   gui.add(materiali,'jade').onFinishChange(function(value) {
        // Fires when a controller loses focus.
 	   if(value == true){
-		for(var i in materiali)
-			materiali[i]=false;
-		materiali.bronze=true;
-		console.log("bronze");		   
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.135, 0.2225, 0.1575);
+         gl.uniform3f(u_DiffuseMat, 0.54, 0.89, 0.63);
+         gl.uniform3f(u_SpecularMat, 0.316228, 0.316228, 0.316228);
+         gl.uniform1f(u_Shininess, 0.1*128);
+         //Update GUI   
+         for(var i in materiali) materiali[i]=false;
+         materiali.jade=true;
+         console.log("jade");		
 	   }
 	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
    });
-  gui.add(materiali,'jade').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
-	   if(value == true){
-		for(var i in materiali)
-			materiali[i]=false;
-		materiali.jade=true;
-		console.log("jade");		
-	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
+   gui.add(materiali,'obsidian').onFinishChange(function(value) {
+      if(value == true){
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.05375, 0.05, 0.06625);
+         gl.uniform3f(u_DiffuseMat, 0.18275, 0.17, 0.22525);
+         gl.uniform3f(u_SpecularMat, 0.332741, 0.328634, 0.346435);
+         gl.uniform1f(u_Shininess, 0.3*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.obsidian=true;
+         console.log("obsidian");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
    });
-  gui.add(materiali,'gold').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
+   gui.add(materiali,'pearl').onFinishChange(function(value) {
+      if(value == true){
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.25, 0.20725, 0.20725);
+         gl.uniform3f(u_DiffuseMat, 1.0, 0.829, 0.829);
+         gl.uniform3f(u_SpecularMat, 0.296648, 0.296648, 0.296648);
+         gl.uniform1f(u_Shininess, 0.088*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.pearl=true;
+         console.log("pearl");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'ruby').onFinishChange(function(value) {
+      if(value == true){
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.1745, 0.01175, 0.01175);
+         gl.uniform3f(u_DiffuseMat, 0.61424, 0.04136, 0.04136);
+         gl.uniform3f(u_SpecularMat, 0.727811, 0.626959, 0.626959);
+         gl.uniform1f(u_Shininess, 0.6*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.ruby=true;
+         console.log("ruby");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'turquoise').onFinishChange(function(value) {
+      if(value == true){
+         // Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.1, 0.18725, 0.1745);
+         gl.uniform3f(u_DiffuseMat, 0.396, 0.74151, 0.69102);
+         gl.uniform3f(u_SpecularMat, 0.297254, 0.30829, 0.306678);
+         gl.uniform1f(u_Shininess, 0.1*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.turquoise=true;
+         console.log("turquoise");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'brass').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
 	   if(value == true){
-		for(var i in materiali)
-			materiali[i]=false;
-		materiali.gold=true;
-		console.log("gold");
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.329412, 0.223529, 0.027451);
+         gl.uniform3f(u_DiffuseMat, 0.780392, 0.780392, 0.113725);
+         gl.uniform3f(u_SpecularMat, 0.992157, 0.941176, 0.807843);
+         gl.uniform1f(u_Shininess, 0.21794872*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.brass=true;
+         console.log("brass");
 	   }
 	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'bronze').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+      if(value == true){
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.2125, 0.1275, 0.054);
+         gl.uniform3f(u_DiffuseMat, 0.714, 0.4284, 0.18144);
+         gl.uniform3f(u_SpecularMat, 0.393548, 0.271906, 0.166721);
+         gl.uniform1f(u_Shininess, 0.2*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.bronze=true;
+         console.log("bronze");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'chrome').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+      if(value == true){
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.25, 0.25, 0.25);
+         gl.uniform3f(u_DiffuseMat, 0.4, 0.4, 0.4);
+         gl.uniform3f(u_SpecularMat, 0.774597, 0.774597, 0.774597);
+         gl.uniform1f(u_Shininess, 0.6*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.chrome=true;
+         console.log("chrome");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'copper').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+      if(value == true){
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.19125, 0.0735, 0.0225);
+         gl.uniform3f(u_DiffuseMat, 0.7038, 0.27048, 0.0828);
+         gl.uniform3f(u_SpecularMat, 0.256777, 0.137622, 0.086014);
+         gl.uniform1f(u_Shininess, 0.1*128);
+         //Update GUI
+         for(var i in materiali) materiali[i]=false;
+         materiali.copper=true;
+         console.log("copper");		   
+      }
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'silver').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+	   if(value == true){
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.19225, 0.19225, 0.19225);
+         gl.uniform3f(u_DiffuseMat, 0.50754, 0.50754, 0.50754);
+         gl.uniform3f(u_SpecularMat, 0.508273, 0.508273, 0.508273);
+         gl.uniform1f(u_Shininess, 0.4*128);
+         //Update GUI
+         for(var i in materiali)	materiali[i]=false;
+         materiali.silver=true;
+         console.log("silver");
+	   }
+	   // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
+   });
+   gui.add(materiali,'gold').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+	   if(value == true){
+         //Set the material properties
+         gl.uniform3f(u_AmbientMat, 0.24725, 0.1995, 0.0745);
+         gl.uniform3f(u_DiffuseMat, 0.75164, 0.60648, 0.22648);
+         gl.uniform3f(u_SpecularMat, 0.628281, 0.555802, 0.366065);
+         gl.uniform1f(u_Shininess, 0.4*128);
+         //Update GUI
+         for(var i in materiali)	materiali[i]=false;
+         materiali.gold=true;
+         console.log("gold");
+	   }
+	   // Iterate over all controllers
+      for (var i in gui.__controllers) {
+         gui.__controllers[i].updateDisplay();
+      }
    });
   //*********************************************************************************
   
