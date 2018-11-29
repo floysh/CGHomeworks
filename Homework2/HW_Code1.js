@@ -219,7 +219,7 @@ function initVertexBuffersCube(gl) {
 
   // Colors
   var colors = [];
-  var normColor = {
+  var normColor = { //normalize colorpicker's color components as WebGL color range is [0,1] instead of [0,255]
     "red": colore.color0[0] / 255, 
     "green": colore.color0[1] / 255, 
     "blue": colore.color0[2] / 255
@@ -354,9 +354,9 @@ return indices.length;
 }
 
 function initVertexBuffersCylinder(gl) {
-  var p = [1.0, -0.6, 0.6]; //bottom base start point
+  var p = [0.6, -0.8, 0.6]; //bottom base start point
   var bottomcenter = [0.0, p[1], 0.0];
-  var h = 1.4;
+  var h = 1.6;
   
   var n = 100;
   var angleStep = 2* Math.PI / n;
@@ -481,9 +481,8 @@ function initVertexBuffersSphere(gl) {
   //drawElements() requires the type field to be gl.UNSIGNED_SHORT when using 16-bit indices
 
   var r = 1.5;
-  var n = 60;
+  var n = 70;
 
-  // Calculate points and colors
   var angleStep = 2* Math.PI / n;
   var normColor = {
     "red": colore.color0[0] / 255, 
@@ -495,9 +494,8 @@ function initVertexBuffersSphere(gl) {
   var indices = [];
   var x,y,z;
   
-  // Vertices & Colors
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * angleStep; //con 2*PI/n disegna due diagonali nelle facce ?
+    var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
     for (var j = 0; j <= n; j++) { //rotazione Z
@@ -505,33 +503,23 @@ function initVertexBuffersSphere(gl) {
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
-      //Cuscino - Anello divelto
-      x = r * cosXY * sinZ;
-      y = r * sinXY * cosZ;
-      z = r * cosZ;
-
-      //Sfera di https://github.com/davidwparker/programmingtil-webgl/blob/master/0078-3d-sphere/index.js
-      //inverte seni e coseni ma il risultato è lo stesso ?
-      x = r * cosZ * sinXY;
-      y = r * sinZ * sinXY;
-      z = r * cosXY;
-
-      //Sfera giusta ?
+      //Vertices
       x = r * cosXY * sinZ;
       z = r * sinXY * sinZ; //scambio y e z per tenere i poli in verticale
       y = r * cosZ;
 
       points.push(x); points.push(y); points.push(z);
 
+      //Colors
       colors.push(normColor.red);
       colors.push(normColor.green);
       colors.push(normColor.blue);
 
-      //indices.push(i*n+j) //test punti
       //Indices
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
-      var p2 = p1 + (n+1); //pto sopra a p1 = analogo a p1 nello strato successivo
+      var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
 
+      //indices.push(i*n+j) //test punti
       if (i < n && j < n) { //mi fermo prima sennò drawElements va fuori dal buffer
         indices.push(p1); indices.push(p2); indices.push(p1 + 1);
         indices.push(p1 + 1); indices.push(p2); indices.push(p2 + 1);
@@ -565,7 +553,6 @@ function initVertexBuffersTorus(gl) {
   var r = 0.3;
   var n = 60;
 
-  // Calculate points and colors
   var angleStep = 2* Math.PI / n;
   var normColor = {"red": colore.color0[0] / 255, "green": colore.color0[1] / 255, "blue": colore.color0[2] / 255};
   var colors = [];
@@ -573,17 +560,17 @@ function initVertexBuffersTorus(gl) {
   var indices = [];
   var x,y,z;
   
-  // Vertices & Colors
+  //Calculate points
   for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
     var angleTHETA = i * angleStep;
     var sinTHETA = Math.sin(angleTHETA);
     var cosTHETA = Math.cos(angleTHETA);
-    for (var j = 0; j <= n; j++) { //rotazione pti anello
+    for (var j = 0; j <= n; j++) { //rotazione pti sull'anello
       var anglePHI = j * angleStep;
       var sinPHI = Math.sin(anglePHI);
       var cosPHI = Math.cos(anglePHI);
 
-      //cono da palestra divelto
+      //Vertices & Colors
       x = (Rhole + r * cosPHI) * cosTHETA;
       y = (Rhole + r * cosPHI) * sinTHETA;
       z = r * sinPHI;
@@ -594,11 +581,11 @@ function initVertexBuffersTorus(gl) {
       colors.push(normColor.green);
       colors.push(normColor.blue);
 
-      //indices.push(i*n+j) //test punti
       //Indices
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
       var p2 = p1 + (n+1); //pto sopra a p1 = analogo a p1 nello strato successivo
 
+      //indices.push(i*n+j) //test punti
       if (i < n && j < n) { //mi fermo prima sennò drawElements va fuori dal buffer
         indices.push(p1); indices.push(p2); indices.push(p1 + 1);
         indices.push(p1 + 1); indices.push(p2); indices.push(p2 + 1);
@@ -663,9 +650,6 @@ function animate(angle) {
   var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle %= 360;
 }
-
-
-
 
 
 //////////////////////////////////////
