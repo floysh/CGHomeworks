@@ -1,6 +1,4 @@
-// Codice1.js 
-// implementazione modello di blinn phong
-// GDD - 2017
+// Studente: Davide Civolani    MAT:121425
 
 // Vertex shader program
 var VSHADER_SOURCE =
@@ -408,23 +406,23 @@ function initVertexBuffersCylinder(gl) {
    var indices = [];
    
    var angleStep = 2 * Math.PI / n;
-   var bc = [0.0, 0.0, 0.0];//bottom centre: it shares x and z components with the top centre
+   var bc = [0.0, 0.0, 0.0];//centro base inferiore
 
-   //BASES
-	//bottom
-	vertices.push(bc[0], bc[1], bc[2]); //bottom centre
+   //BASI
+	//giù
+	vertices.push(bc[0], bc[1], bc[2]); //centro base inferiore
 	normals.push(0.0, -1.0, 0.0);
-	for(var i = 0; i <= n; i++) { //bottom vertexes
+	for(var i = 0; i <= n; i++) { //calcola i vertici inferiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
 		normals.push(0.0, -1.0, 0.0);
 	} 
 
-   //top
-	vertices.push(bc[0], bc[1] + h, bc[2]); //top centre
+   //su
+	vertices.push(bc[0], bc[1] + h, bc[2]); //centro base superiore
    normals.push(0.0, 1.0, 0.0);
-	for(var i = 0; i <= n; i++) { //top vertexes
+	for(var i = 0; i <= n; i++) { //calcola i vertici superiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
@@ -432,36 +430,37 @@ function initVertexBuffersCylinder(gl) {
 	} 
 
 
-   //SIDE
-   //duplicated vertices are needed as WebGL associate a normal to the point in the same position in the buffer object
+   //SUPERFICIE LATERALE
+   //WebGL associa le normali ai vertici con lo stesso indice nel buffer object
+   //Bisogna inserirli più volte nel buffer object per poter usare più normali per lo stesso punto
    for(var i = 0; i <= n; i++) {
       angle = i * angleStep;
 
-		//bottom
+		//giù
       vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
 		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
 
-		//top
+		//su
       vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
 		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
 	} 
 
 
-	//INDICES
-	//bottom surface
+	//INDICI
+	//base inferiore
 	for (var i = 0; i < n; i++) {
       indices.push(0, i+1, i+2);
    }
 	indices.push(0, 1, n+1);
 
-	//top surface
+	//base superiore
 	ipsopra = n+2;
 	for(var i = 0; i < n; i++) {
       indices.push(n+2, i+n+3, i+n+4);
    }
 	indices.push(n+2, n+3, (2*n)+3);
 
-   //side surface links
+   //superficie laterale
    var rep_offset = (n+2)*2;
 	for (i=0; i < 2*n; i++) {
       indices.push(i+(n+2)*2, i+(n+2)*2 +1, i+(n+2)*2 +2);

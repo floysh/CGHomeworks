@@ -1,4 +1,5 @@
-// hw2.js
+// Studente: Davide Civolani    MAT:121425
+
 // Vertex shader program
 "use strict";
 var VSHADER_SOURCE =
@@ -27,9 +28,9 @@ var RENDERING_MODE = null;
 var TEST = false;
 
 function main() {
-
-  colore = {color0:[0,120,255]}; //must be initialized before calling any initVertex function
+  colore = {color0:[13,63,119]}; //must be initialized before calling any initVertex function
   //0,105,255
+  //0,120,255
 
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
@@ -85,8 +86,8 @@ function main() {
   gui.addColor(colore,'color0').name("figure color").listen().onChange(function(value) {
     for (var figure in geometria) {
       if (geometria[figure] == true) {
-        var func2call = "initVertexBuffers"+figure.charAt(0).toUpperCase() + figure.slice(1); //retrive function name
-        window[func2call](gl); //calls a global function given its name
+        var func2call = "initVertexBuffers"+figure.charAt(0).toUpperCase() + figure.slice(1); //ottieni il nome della funzione da invocare
+        window[func2call](gl); //chiama la funzione globale il cui nome è contenuto nella stringa func2call
       }
     }
   });
@@ -267,7 +268,6 @@ function initVertexBuffersCone(gl) {
   var n = 100;
   var angleStep = 2* Math.PI / n;
 
-  // Calculate points and colors
   var colors = [];
   var points = [];
   var indices = [];
@@ -277,40 +277,34 @@ function initVertexBuffersCone(gl) {
     "blue": colore.color0[2] / 255
   };
 
-  //SIDE
-  //push spike
+
+  //SUPERFICIE LATERALE
+  //inserisco punta
   points.push(spike[0]); points.push(spike[1]); points.push(spike[2]);
-  if (TEST) {
-    //TRIANGLE ORDER TEST
-    colors.push(1); //red
-    colors.push(0.5); //green
-    colors.push(0); //blue
-  } else {
-    colors.push(normColor.red);
-    colors.push(normColor.green);
-    colors.push(normColor.blue);
-  }
+  colors.push(normColor.red);
+  colors.push(normColor.green);
+  colors.push(normColor.blue);
   
+  //Inserisco gli altri punti (sono condivisi con la base)
   for (var i=0; i < n; i++) {
-    //Find base points coordinates rotating a known one by 360/n degrees each step
     points.push( p[0] *Math.cos(i*angleStep) - p[2] *Math.sin(i*angleStep));
     points.push(p[1]);
     points.push( p[0] *Math.sin(i*angleStep) + p[2] *Math.cos(i*angleStep));
-    //Colors
+    //Colori
     colors.push(normColor.red);
     colors.push(normColor.green);
     colors.push(normColor.blue);
-    //Indexes
+    //Indici
     indices.push(0);
     indices.push(i+1);
     indices.push(i+2);
   }
   indices[indices.length-1] = 1;
 
-  //indices = []; //test base rendering
+  //indices = []; //test rendering base
 
   //BASE
-  //push base center
+  //è sufficiente inserire solo il centro
   points.push(spike[0]); points.push(p[1]); points.push(spike[2]);
   if (TEST) {
     //TRIANGLE ORDER TEST
@@ -324,11 +318,11 @@ function initVertexBuffersCone(gl) {
   }
 
   for (var i=1; i <=n; i++) {
-      indices.push(n+1); //base center position
+      indices.push(n+1); //centro della base
       indices.push(i);
       indices.push(i+1);
   }
-  indices[indices.length-1] = 1; //join last triangle with the first one
+  indices[indices.length-1] = 1; //collega l'ultimo triangolo con il primo
 
   points = new Float32Array(points);
   colors = new Float32Array(colors);
@@ -354,14 +348,12 @@ return indices.length;
 }
 
 function initVertexBuffersCylinder(gl) {
-  var p = [0.6, -0.8, 0.6]; //bottom base start point
-  var bottomcenter = [0.0, p[1], 0.0];
   var h = 1.6;
+  var n = 70;
+  var p = [0.6, -0.8, 0.6]; //punto noto della base inferiore
+  var bottomcenter = [0.0, p[1], 0.0];
   
-  var n = 100;
   var angleStep = 2* Math.PI / n;
-
-  // Calculate points and colors
   var normColor = {
     "red": colore.color0[0] / 255, 
     "green": colore.color0[1] / 255, 
@@ -372,85 +364,48 @@ function initVertexBuffersCylinder(gl) {
   var indices = [];
   var x,y,z;
 
-  //push bottom base center
-  points.push(bottomcenter[0]); points.push(bottomcenter[1]); points.push(bottomcenter[2]);
-  if (TEST) {
-    //TRIANGLE ORDER TEST
-    colors.push(1); //red
-    colors.push(0.5); //green
-    colors.push(0); //blue
-  } else {
-    colors.push(normColor.red);
-    colors.push(normColor.green);
-    colors.push(normColor.blue);
-  }
+  //Vertici & Colori
+  //centri delle basi
+  points.push(bottomcenter[0], bottomcenter[1], bottomcenter[2]); //base inferiore -> 0
+  colors.push(normColor.red, normColor.green, normColor.blue);
 
+  points.push(bottomcenter[0], bottomcenter[1]+h, bottomcenter[2]); //base superiore -> 1
+  colors.push(normColor.red, normColor.green, normColor.blue);
+  
   for (var i=0; i < n; i++) {
-    //Find bottom base points coordinates rotating a known one by 360/n degrees each step
     x = p[0] *Math.cos(i*angleStep) - p[2] *Math.sin(i*angleStep);
     y = p[1];
     z = p[0] *Math.sin(i*angleStep) + p[2] *Math.cos(i*angleStep);
     
-    //add bottom base points
-    points.push(x); points.push(y); points.push(z);
-    colors.push(normColor.red);
-    colors.push(normColor.green);
-    colors.push(normColor.blue);
+    //vertici inferiori
+    points.push(x, y, z);
+    colors.push(normColor.red, normColor.green, normColor.blue);
 
-    //add upper base points
-    points.push(x); points.push(y+h); points.push(z);
-    colors.push(normColor.red);
-    colors.push(normColor.green);
-    colors.push(normColor.blue);
-    
-    //Indexes
-    //bases triangle(s)
-    if (i > 0) { //add indices only after having a complete side rectangle (2 iterations for the first triangle, 1 for others)
-      //bottom base
-      indices.push(0);
-      indices.push(2*i-1);
-      indices.push(2*i+1);
-      //upper base
-      indices.push(2*n+1);
-      indices.push(2*i);
-      indices.push(2*i+2);
-    }
+    //vertici superiori
+    points.push(x, y+h, z);
+    colors.push(normColor.red, normColor.green, normColor.blue);
+
   }
   
-  //side triangle(s)
-  for (i=0; i<=2*n; i++) {
-    /* //lower side triangles
-    indices.push(i*2+1);
-    indices.push(i*2+2);
-    indices.push((i*2+3) % (2*n));
-    
-    //upper side triangles
-    indices.push((i*2+2) % (2*n));
-    indices.push((i*2+4) % (2*n));
-    indices.push((i*2+3) % (2*n)); */
-    if (i+1 <= 2*n) indices.push(i+1);
-    if (i+2 <= 2*n) indices.push(i+2);
-    if (i+3 <= 2*n) indices.push(i+3);
-  }
-  //push missing triangles
-  indices.push(0); indices.push(2*n-1); indices.push(1);    //missing bottom base triangle
-  indices.push(2*n+1); indices.push(2*n); indices.push(2);  //missing top base triangle
-  indices.push(2*n-1); indices.push(1); indices.push(2);    //missing bottom side triangle
-  indices.push(2* n-1); indices.push(2*n); indices.push(2); //missing top side triangle
-
-  //push upper base center
-  points.push(bottomcenter[0]); points.push(bottomcenter[1]+h); points.push(bottomcenter[2]);
-  if (TEST) {
-    //TRIANGLE ORDER TEST
-    colors.push(0); //red
-    colors.push(1); //green
-    colors.push(0); //blue
-  } else {
-    colors.push(normColor.red);
-    colors.push(normColor.green);
-    colors.push(normColor.blue);
+  //Indici
+  //Basi
+  //Gli indici della base superiore sono dispari, quelli della base inferiore sono pari
+  var FAN_OFFSET = 2;
+  for (var i=0; i<2*n; i++) {
+    if (i%2==0) indices.push(0); //centro base superiore
+    else indices.push(1); //centro base inferiore
+    indices.push(FAN_OFFSET + i%(2*n), FAN_OFFSET + (i+2)%(2*n));
   }
 
+  //Superficie laterale
+  for (var i=FAN_OFFSET; i<2*n; i++) {
+    indices.push(i, i+2, i+1);
+    indices.push(i+1, i-1, i);
+  }
+  //collego gli ultimi vertici ai primi
+  indices.push(2*n, FAN_OFFSET, FAN_OFFSET+1); //triangolo sotto
+  indices.push(FAN_OFFSET+1, 2*n+1, 2*n); //triangolo sopra
+  
 
   //Send data to shaders
   points = new Float32Array(points);
@@ -477,8 +432,8 @@ return indices.length;
 }
 
 function initVertexBuffersSphere(gl) {
-  //Requires an Uint16 index buffer or it won't draw some parts with n > 20
-  //drawElements() requires the type field to be gl.UNSIGNED_SHORT when using 16-bit indices
+  //L'index buffer deve essere inizializzato con un Uint16Array o si verificano glitch con n>20
+  //drawElements() richiede gl.UNSIGNED_SHORT nel campo "type" quando si usano indici a 16 bit
 
   var r = 1.5;
   var n = 70;
@@ -494,6 +449,7 @@ function initVertexBuffersSphere(gl) {
   var indices = [];
   var x,y,z;
   
+
   for (var i = 0; i <= n; i++) { //rotazione XY
     var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
     var sinXY = Math.sin(angleXY);
@@ -503,26 +459,24 @@ function initVertexBuffersSphere(gl) {
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
-      //Vertices
+      //Vertici
       x = r * cosXY * sinZ;
-      z = r * sinXY * sinZ; //scambio y e z per tenere i poli in verticale
-      y = r * cosZ;
+      y = r * sinXY * sinZ;
+      z = r * cosZ;
 
-      points.push(x); points.push(y); points.push(z);
+      points.push(x,z,y); //scambio y e z per tenere i poli in verticale
 
-      //Colors
-      colors.push(normColor.red);
-      colors.push(normColor.green);
-      colors.push(normColor.blue);
+      //Colori
+      colors.push(normColor.red, normColor.green, normColor.blue);
 
-      //Indices
+      //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
       var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
 
       //indices.push(i*n+j) //test punti
-      if (i < n && j < n) { //mi fermo prima sennò drawElements va fuori dal buffer
-        indices.push(p1); indices.push(p2); indices.push(p1 + 1);
-        indices.push(p1 + 1); indices.push(p2); indices.push(p2 + 1);
+      if (i < n && j < n) { //mi fermo prima altrimenti drawElements va fuori dal buffer
+        indices.push(p1, p2, p1 + 1);
+        indices.push(p1 + 1, p2, p2 + 1);
       }
     }
   }
@@ -560,7 +514,7 @@ function initVertexBuffersTorus(gl) {
   var indices = [];
   var x,y,z;
   
-  //Calculate points
+
   for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
     var angleTHETA = i * angleStep;
     var sinTHETA = Math.sin(angleTHETA);
@@ -570,25 +524,24 @@ function initVertexBuffersTorus(gl) {
       var sinPHI = Math.sin(anglePHI);
       var cosPHI = Math.cos(anglePHI);
 
-      //Vertices & Colors
+      //Vertici
       x = (Rhole + r * cosPHI) * cosTHETA;
       y = (Rhole + r * cosPHI) * sinTHETA;
       z = r * sinPHI;
 
-      points.push(x); points.push(y); points.push(z);
+      points.push(x,y,z);
 
-      colors.push(normColor.red);
-      colors.push(normColor.green);
-      colors.push(normColor.blue);
+      //Colori
+      colors.push(normColor.red, normColor.green, normColor.blue);
 
-      //Indices
+      //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
-      var p2 = p1 + (n+1); //pto sopra a p1 = analogo a p1 nello strato successivo
+      var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
 
       //indices.push(i*n+j) //test punti
-      if (i < n && j < n) { //mi fermo prima sennò drawElements va fuori dal buffer
-        indices.push(p1); indices.push(p2); indices.push(p1 + 1);
-        indices.push(p1 + 1); indices.push(p2); indices.push(p2 + 1);
+      if (i < n && j < n) { //mi fermo prima altrimenti drawElements va fuori dal buffer
+        indices.push(p1, p2, p1 + 1);
+        indices.push(p1 + 1, p2, p2 + 1);
       }
     }
   }

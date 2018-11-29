@@ -1,6 +1,4 @@
-// Codice1.js 
-// implementazione modello di blinn phong
-// GDD - 2017
+// Studente: Davide Civolani    MAT:121425
 
 // VERTEX SHADER
 var VSHADER_SOURCE = 
@@ -465,68 +463,7 @@ function main() {
   tick();
 }
 
-function initVertexBuffersCube(gl) {
-  // Create a cube
-  //    v6----- v5
-  //   /|      /|
-  //  v1------v0|
-  //  | |     | |
-  //  | |v7---|-|v4
-  //  |/      |/
-  //  v2------v3
-  // Coordinates
-  var positions = new Float32Array([
-     1.0, 1.0, 1.0,  -1.0, 1.0, 1.0,  -1.0,-1.0, 1.0,   1.0,-1.0, 1.0, // v0-v1-v2-v3 front
-     1.0, 1.0, 1.0,   1.0,-1.0, 1.0,   1.0,-1.0,-1.0,   1.0, 1.0,-1.0, // v0-v3-v4-v5 right
-     1.0, 1.0, 1.0,   1.0, 1.0,-1.0,  -1.0, 1.0,-1.0,  -1.0, 1.0, 1.0, // v0-v5-v6-v1 up
-    -1.0, 1.0, 1.0,  -1.0, 1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0,-1.0, 1.0, // v1-v6-v7-v2 left
-    -1.0,-1.0,-1.0,   1.0,-1.0,-1.0,   1.0,-1.0, 1.0,  -1.0,-1.0, 1.0, // v7-v4-v3-v2 down
-     1.0,-1.0,-1.0,  -1.0,-1.0,-1.0,  -1.0, 1.0,-1.0,   1.0, 1.0,-1.0  // v4-v7-v6-v5 back
-  ]);
 
-  // Normal
-  var normals = new Float32Array([
-    0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,   0.0, 0.0, 1.0,  // v0-v1-v2-v3 front
-    1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,   1.0, 0.0, 0.0,  // v0-v3-v4-v5 right
-    0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,   0.0, 1.0, 0.0,  // v0-v5-v6-v1 up
-   -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  // v1-v6-v7-v2 left
-    0.0,-1.0, 0.0,   0.0,-1.0, 0.0,   0.0,-1.0, 0.0,   0.0,-1.0, 0.0,  // v7-v4-v3-v2 down
-    0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0,   0.0, 0.0,-1.0   // v4-v7-v6-v5 back
-  ]);
-
-  // Indices of the vertices
-  var indices = new Uint16Array([
-     0, 1, 2,   0, 2, 3,    // front
-     4, 5, 6,   4, 6, 7,    // right
-     8, 9,10,   8,10,11,    // up
-    12,13,14,  12,14,15,    // left
-    16,17,18,  16,18,19,    // down
-    20,21,22,  20,22,23     // back
- ]);
-
-
-  // Write the vertex property to buffers (coordinates and normals)
-  // Same data can be used for vertex and normal
-  // In order to make it intelligible, another buffer is prepared separately
-  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(positions), gl.FLOAT, 3)) return -1;
-  if (!initArrayBuffer(gl, 'a_Normal'  , new Float32Array(normals)  , gl.FLOAT, 3)) return -1;
-  
-  // Unbind the buffer object
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  // Write the indices to the buffer object
-  var indexBuffer = gl.createBuffer();
-  if (!indexBuffer) {
-    console.log('Failed to create the buffer object');
-    return -1;
-  }
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-
-  return indices.length;
-}
-
-var points = [], normals = [], indices = []; 
 function initVertexBuffersCylinder(gl) {
    var n = 70;
    var r = 1.0;
@@ -537,23 +474,23 @@ function initVertexBuffersCylinder(gl) {
    var indices = [];
    
    var angleStep = 2 * Math.PI / n;
-   var bc = [0.0, 0.0, 0.0];//bottom centre: it shares x and z components with the top centre
+   var bc = [0.0, 0.0, 0.0];//centro base inferiore
 
-   //BASES
-	//bottom
-	vertices.push(bc[0], bc[1], bc[2]); //bottom centre
+   //BASI
+	//giù
+	vertices.push(bc[0], bc[1], bc[2]); //centro base inferiore
 	normals.push(0.0, -1.0, 0.0);
-	for(var i = 0; i <= n; i++) { //bottom vertexes
+	for(var i = 0; i <= n; i++) { //calcola i vertici inferiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
 		normals.push(0.0, -1.0, 0.0);
 	} 
 
-   //top
-	vertices.push(bc[0], bc[1] + h, bc[2]); //top centre
+   //su
+	vertices.push(bc[0], bc[1] + h, bc[2]); //centro base superiore
    normals.push(0.0, 1.0, 0.0);
-	for(var i = 0; i <= n; i++) { //top vertexes
+	for(var i = 0; i <= n; i++) { //calcola i vertici superiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
@@ -561,36 +498,37 @@ function initVertexBuffersCylinder(gl) {
 	} 
 
 
-   //SIDE
-   //duplicated vertices are needed as WebGL associate a normal to the point in the same position in the buffer object
+   //SUPERFICIE LATERALE
+   //WebGL associa le normali ai vertici con lo stesso indice nel buffer object
+   //Bisogna inserirli più volte nel buffer object per poter usare più normali per lo stesso punto
    for(var i = 0; i <= n; i++) {
       angle = i * angleStep;
 
-		//bottom
+		//giù
       vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
 		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
 
-		//top
+		//su
       vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
 		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
 	} 
 
 
-	//INDICES
-	//bottom surface
+	//INDICI
+	//base inferiore
 	for (var i = 0; i < n; i++) {
       indices.push(0, i+1, i+2);
    }
 	indices.push(0, 1, n+1);
 
-	//top surface
+	//base superiore
 	ipsopra = n+2;
 	for(var i = 0; i < n; i++) {
       indices.push(n+2, i+n+3, i+n+4);
    }
 	indices.push(n+2, n+3, (2*n)+3);
 
-   //side surface links
+   //superficie laterale
    var rep_offset = (n+2)*2;
 	for (i=0; i < 2*n; i++) {
       indices.push(i+(n+2)*2, i+(n+2)*2 +1, i+(n+2)*2 +2);
@@ -616,6 +554,7 @@ function initVertexBuffersCylinder(gl) {
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 	return indices.length;
 }
+
 
 
 function initArrayBuffer(gl, attribute, data, type, num) {
