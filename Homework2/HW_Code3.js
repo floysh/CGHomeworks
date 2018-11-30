@@ -134,8 +134,6 @@ function main() {
       return;
    }
 
-  
-   
 
   //TEST FUNZIONE
   // Set the vertex coordinates, the color and the normal
@@ -463,11 +461,8 @@ function main() {
   tick();
 }
 
-
-
-
 function initVertexBuffersCylinder(gl) {
-   var n = 70;
+   var n = 170;
    var r = 1.0;
    var h = 1.4;
 
@@ -556,9 +551,6 @@ function initVertexBuffersCylinder(gl) {
 	return indices.length;
 }
 
-
-
-
 function initArrayBuffer(gl, attribute, data, type, num) {
   // Create a buffer object
   var buffer = gl.createBuffer();
@@ -595,20 +587,4 @@ function animate(angle) {
   // Update the current rotation angle (adjusted by the elapsed time)
   var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
   return newAngle %= 360;
-}
-
-function normalize(vertices) {
-   var n = [0,0,0], normals = [];
-   for (var i=0; i < vertices.length - 3; i++) {
-      var a = i;
-      var b = i + 2;
-      var c = i + 3;
-
-      n[0] = (b[1]-a[1]) * (c[2]-b[2]) - (b[2]-a[2]) * (c[1]-b[1]);
-      n[1] = (b[2]-a[2]) * (c[0]-b[0]) - (b[0]-a[0]) * (c[2]-b[2]);
-      n[2] = (b[0]-a[0]) * (c[1]-b[1]) - (b[1]-a[1]) * (c[0]-b[0]);
-
-      normals.push(n[0]); normals.push(n[1]); normals.push(n[2]);
-   }
-   return normals;
 }

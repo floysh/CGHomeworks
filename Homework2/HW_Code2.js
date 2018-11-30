@@ -70,6 +70,7 @@ function main() {
     return;
   }
 
+
   //TEST FUNZIONE
   // Set the vertex coordinates, the color and the normal
   var n = initVertexBuffersCylinder(gl);
@@ -397,7 +398,7 @@ function main() {
 }
 
 function initVertexBuffersCylinder(gl) {
-   var n = 70;
+   var n = 170;
    var r = 1.0;
    var h = 1.4;
 
@@ -485,7 +486,6 @@ function initVertexBuffersCylinder(gl) {
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 	return indices.length;
 }
-
 
 function initArrayBuffer(gl, attribute, data, type, num) {
   // Create a buffer object
