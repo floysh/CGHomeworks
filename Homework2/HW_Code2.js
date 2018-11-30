@@ -406,34 +406,35 @@ function initVertexBuffersCylinder(gl) {
    var indices = [];
    
    var angleStep = 2 * Math.PI / n;
-   var bc = [0.0, 0.0, 0.0];//centro base inferiore
+   var bc = [0.0, 0.0, 0.0]; //centro base inferiore
 
    //BASI
-	//giù
-	vertices.push(bc[0], bc[1], bc[2]); //centro base inferiore
+   //base inferiore
+   //faccio n+1 rotazioni così è più semplice calcolare gli indici per disegnare l'ultima faccia
+   //il consumo di di memoria è minimo (4 vertici) ma il codice è molto più chiaro e compatto
+	vertices.push(bc[0], bc[1], bc[2]); //centro base inferiore -> indice 0
 	normals.push(0.0, -1.0, 0.0);
 	for(var i = 0; i <= n; i++) { //calcola i vertici inferiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
 		normals.push(0.0, -1.0, 0.0);
-	} 
+	} //ora ci sono 1 + n+1 = n+2 vertici
 
-   //su
-	vertices.push(bc[0], bc[1] + h, bc[2]); //centro base superiore
+   //base superiore
+	vertices.push(bc[0], bc[1] + h, bc[2]); //centro base superiore -> indice 1+n+1 = n+2
    normals.push(0.0, 1.0, 0.0);
 	for(var i = 0; i <= n; i++) { //calcola i vertici superiori
       angle = i * angleStep;
       
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
 		normals.push(0.0, 1.0, 0.0);
-	} 
-
+	}
 
    //SUPERFICIE LATERALE
    //WebGL associa le normali ai vertici con lo stesso indice nel buffer object
    //Bisogna inserirli più volte nel buffer object per poter usare più normali per lo stesso punto
-   for(var i = 0; i <= n; i++) {
+   for(var i = 0; i <= n; i++) { //indici iniziano da 1+(n+1)+1+(n+1) = 2n+4 = 2(n+2)
       angle = i * angleStep;
 
 		//giù
@@ -448,22 +449,20 @@ function initVertexBuffersCylinder(gl) {
 
 	//INDICI
 	//base inferiore
-	for (var i = 0; i < n; i++) {
-      indices.push(0, i+1, i+2);
+	for (var i = 1; i <= n; i++) {
+      indices.push(0, i, i+1);
    }
-	indices.push(0, 1, n+1);
 
 	//base superiore
-	ipsopra = n+2;
-	for(var i = 0; i < n; i++) {
-      indices.push(n+2, i+n+3, i+n+4);
+	TOP_FAN_OFFSET = n+2; //è anche l'indice del centro della base superiore
+	for(var i = 1; i <= n; i++) {
+      indices.push(TOP_FAN_OFFSET, TOP_FAN_OFFSET+i, TOP_FAN_OFFSET+i+1);
    }
-	indices.push(n+2, n+3, (2*n)+3);
 
    //superficie laterale
-   var rep_offset = (n+2)*2;
+   var SIDE_OFFSET = (n+2)*2;
 	for (i=0; i < 2*n; i++) {
-      indices.push(i+(n+2)*2, i+(n+2)*2 +1, i+(n+2)*2 +2);
+      indices.push(SIDE_OFFSET+i, SIDE_OFFSET+i+1, SIDE_OFFSET+i+2);
    }
 
 
