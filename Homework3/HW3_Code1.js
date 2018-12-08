@@ -276,9 +276,9 @@ function initVertexBuffersCube(gl) {
 
 
 function initVertexBuffersCone(gl) { // Create a cone
-  var p = [1.0, -0.6, 0.6]; //p[0] -> raggio r
+  var p = [1.0, -0.6, 0.0]; //p[0] -> raggio r
   var spike = [0.0, 1.5, 0.0];
-  var n = 20;
+  var n = 100;
   var angleStep = 2* Math.PI / n;
 
   var points = [];
@@ -288,28 +288,28 @@ function initVertexBuffersCone(gl) { // Create a cone
 
   //SUPERFICIE LATERALE
   //La punta viene replicata ad ogni step per poter mantenere "dritta" la texture
-  for (var i=0; i < 2*n; i++) {
+  for (var i=0; i <= n; i++) {
     var angle = -i*angleStep;
     var x = p[0] *Math.cos(angle) - p[2] *Math.sin(angle);
     var y = p[1];
     var z = p[0] *Math.sin(angle) + p[2] *Math.cos(angle);
 
     //Coordinate
-    points.push(spike[0], spike[1], spike[2]);
     points.push(x, y, z);
+    points.push(spike[0], spike[1], spike[2]);
     
     //Texture
-    uvs.push(i/n, 1);
     uvs.push(i/n, 0);
+    uvs.push(i/n, 1);
 
-    //Indici
-    indices.push(i, i+1, i+2);
+    //Indices
+    indices.push(2*i, 2*i+1, 2*i+2);
   }
-  //indices[indices.length-1] = 1;
+  indices[indices.length-1] = 0; //collega l'ultimo triangolo con il primo
 
   //BASE
   //bisogna replicare i punti perchè le uv della base sono diverse da quelle nella sup. laterale
-  var BASE_OFFSET = n*2;
+  var BASE_OFFSET = n*2+2;
 
   //inserisco centro
   points.push(spike[0], p[1], spike[2]);
@@ -333,6 +333,7 @@ function initVertexBuffersCone(gl) { // Create a cone
     indices.push(BASE_OFFSET + i+1);
   }
   indices[indices.length-1] = BASE_OFFSET + 1; //collega l'ultimo triangolo con il primo
+
 
   //SEND DATA TO SHADERS
   // Write the vertex property to buffers (coordinates and uvs)
@@ -416,17 +417,12 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 
 	//INDICI
-	//base inferiore
+  var TOP_FAN_OFFSET = n+2; //è anche l'indice del centro della base superiore
+  //basi
 	for (var i = 1; i <= n; i++) {
-    indices.push(0, i, i+1);
-   }
-
-	//base superiore
-	var TOP_FAN_OFFSET = n+2; //è anche l'indice del centro della base superiore
-	for(var i = 1; i <= n; i++) {
-    indices.push(TOP_FAN_OFFSET, TOP_FAN_OFFSET+i, TOP_FAN_OFFSET+i+1);
-   }
-
+    indices.push(0, i, i+1); //base inferiore
+    indices.push(TOP_FAN_OFFSET, TOP_FAN_OFFSET+i, TOP_FAN_OFFSET+i+1); //base superiore
+  }
   //superficie laterale
   var SIDE_OFFSET = (n+2)*2;
 	for (i=0; i < 2*n; i++) {
