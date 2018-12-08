@@ -2,6 +2,8 @@
 // implementazione texture mapping
 // GDD - 2017
 // Vertex shader program
+"use strict";
+
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n'   +
   'uniform mat4 u_MvpMatrix;\n'    +
@@ -41,7 +43,8 @@ function main() {
   }
 
   // Set the vertex coordinates, the color and the normal
-  var n = initVertexBuffersCube(gl);
+  //TEST FUNZIONE
+  var n = initVertexBuffersCone(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -73,7 +76,7 @@ function main() {
 // creo una GUI con dat.gui
   var gui = new dat.GUI();
   // checkbox geometry
-  var geometria = {cube:true,cone:false,cylinder:false,sphere:false,torus:false};
+  var geometria = {cube:false,cone:true,cylinder:false,sphere:false,torus:false};
   //
   gui.add(geometria,'cube').onFinishChange(function(value) {
     // Fires when a controller loses focus.
@@ -84,7 +87,8 @@ function main() {
 		geometria.sphere = false;
 		geometria.torus = false;
 		console.log(geometria.cube + " " +geometria.cone);
-		 // Set the vertex coordinates, the color and the normal
+    
+    // Set the vertex coordinates, the color and the normal
 		n = initVertexBuffersCube(gl);
 		if (n < 0) {
 			console.log('Failed to set the vertex information');
@@ -95,71 +99,87 @@ function main() {
        for (var i in gui.__controllers) {
           gui.__controllers[i].updateDisplay();
        }
-   });
+  });
   gui.add(geometria,'cone').onFinishChange(function(value) {
     // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
-	   if(value == true){
-		geometria.cube = false;
-		geometria.cone = value;
-		geometria.cylinder = false;
-		geometria.sphere = false;
-		geometria.torus = false;
-	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
-   });
-  gui.add(geometria,'cylinder').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
-	   if(value == true){
-		geometria.cube = false;
-		geometria.cone = false;
-		geometria.cylinder = value;
-		geometria.sphere = false;
-		geometria.torus = false;
-	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
-   });
-  gui.add(geometria,'sphere').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
-	   if(value == true){
-		geometria.cube = false;
-		geometria.cone = false;
-		geometria.cylinder = false;
-		geometria.sphere = value;
-		geometria.torus = false;
-		n = initVertexBuffersSphere(gl);
+	  if(value == true){
+      geometria.cube = false;
+      geometria.cone = value;
+      geometria.cylinder = false;
+      geometria.sphere = false;
+      geometria.torus = false;
+    }
+    // Set the vertex coordinates, the color and the normal
+		n = initVertexBuffersCone(gl);
 		if (n < 0) {
 			console.log('Failed to set the vertex information');
 			return;
-		}	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
-   });
+    } 
+	  // Iterate over all controllers
+    for (var i in gui.__controllers) {
+      gui.__controllers[i].updateDisplay();
+    }
+  });
+  gui.add(geometria,'cylinder').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+      if(value == true){
+        geometria.cube = false;
+        geometria.cone = false;
+        geometria.cylinder = value;
+        geometria.sphere = false;
+        geometria.torus = false;
+      }
+      // Set the vertex coordinates, the color and the normal
+      n = initVertexBuffersCylinder(gl);
+      if (n < 0) {
+        console.log('Failed to set the vertex information');
+        return;
+      } 
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+        gui.__controllers[i].updateDisplay();
+      }
+  });
+  gui.add(geometria,'sphere').onFinishChange(function(value) {
+      // Fires when a controller loses focus.
+      if(value == true){
+        geometria.cube = false;
+        geometria.cone = false;
+        geometria.cylinder = false;
+        geometria.sphere = value;
+        geometria.torus = false;
+      }
+      // Set the vertex coordinates, the color and the normal
+      n = initVertexBuffersSphere(gl);
+      if (n < 0) {
+        console.log('Failed to set the vertex information');
+        return;
+      } 
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+        gui.__controllers[i].updateDisplay();
+      }
+  });
   gui.add(geometria,'torus').onFinishChange(function(value) {
-    // Fires when a controller loses focus.
-       // Fires when a controller loses focus.
-	   if(value == true){
-		geometria.cube = false;
-		geometria.cone = false;
-		geometria.cylinder = false;
-		geometria.sphere = false;
-		geometria.torus = value;
-	   }
-	   // Iterate over all controllers
-       for (var i in gui.__controllers) {
-          gui.__controllers[i].updateDisplay();
-       }
-   });  
+      // Fires when a controller loses focus.
+      if(value == true){
+        geometria.cube = false;
+        geometria.cone = false;
+        geometria.cylinder = false;
+        geometria.sphere = false;
+        geometria.torus = value;
+      }
+      // Set the vertex coordinates, the color and the normal
+      n = initVertexBuffersTorus(gl);
+      if (n < 0) {
+        console.log('Failed to set the vertex information');
+        return;
+      } 
+      // Iterate over all controllers
+      for (var i in gui.__controllers) {
+        gui.__controllers[i].updateDisplay();
+      }
+  });  
   //*********************************************************************************************
 
   var currentAngle = 0.0;           // Current rotation angle
@@ -177,7 +197,7 @@ function main() {
 	currentAngle = animate(currentAngle);  // Update the rotation angle
 
 	// Calculate the model matrix
-	modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
+	modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
 
 	mvpMatrix.set(vpMatrix).multiply(modelMatrix);
 	// Pass the model view projection matrix to u_MvpMatrix
@@ -254,22 +274,236 @@ function initVertexBuffersCube(gl) {
   return indices.length;
 }
 
-function initVertexBuffersSphere(gl) { // Create a sphere
-
-  return indices.length;
-}
-
-function initVertexBuffersCylinder(gl) { // Create a cylinder
-  return indices.length;
-}
 
 function initVertexBuffersCone(gl) { // Create a cone
+  var p = [1.0, -0.6, 0.6]; //p[0] -> raggio r
+  var spike = [0.0, 1.5, 0.0];
+  var n = 20;
+  var angleStep = 2* Math.PI / n;
+
+  var points = [];
+  var uvs = [];
+  var indices = [];
+
+
+  //SUPERFICIE LATERALE
+  //La punta viene replicata ad ogni step per poter mantenere "dritta" la texture
+  for (var i=0; i < 2*n; i++) {
+    var angle = -i*angleStep;
+    var x = p[0] *Math.cos(angle) - p[2] *Math.sin(angle);
+    var y = p[1];
+    var z = p[0] *Math.sin(angle) + p[2] *Math.cos(angle);
+
+    //Coordinate
+    points.push(spike[0], spike[1], spike[2]);
+    points.push(x, y, z);
+    
+    //Texture
+    uvs.push(i/n, 1);
+    uvs.push(i/n, 0);
+
+    //Indici
+    indices.push(i, i+1, i+2);
+  }
+  //indices[indices.length-1] = 1;
+
+  //BASE
+  //bisogna replicare i punti perchè le uv della base sono diverse da quelle nella sup. laterale
+  var BASE_OFFSET = n*2;
+
+  //inserisco centro
+  points.push(spike[0], p[1], spike[2]);
+  uvs.push(0.5, 0.5);
+
+  //Inserisco gli altri punti (stesse coordinate della sup. laterale)
+  for (var i=1; i <=n; i++) {
+    var angle = i*angleStep;
+
+    //Coordinate
+    points.push( p[0] *Math.cos(angle) - p[2] *Math.sin(angle));
+    points.push( p[1]);
+    points.push( p[0] *Math.sin(angle) + p[2] *Math.cos(angle));
+
+    //Texture
+    uvs.push(0.5 + (p[0]*Math.cos(angle))/2 , 0.5 + (p[0]*Math.sin(angle))/2);
+    
+    //Indici
+    indices.push(BASE_OFFSET); //centro della base
+    indices.push(BASE_OFFSET + i);
+    indices.push(BASE_OFFSET + i+1);
+  }
+  indices[indices.length-1] = BASE_OFFSET + 1; //collega l'ultimo triangolo con il primo
+
+  //SEND DATA TO SHADERS
+  // Write the vertex property to buffers (coordinates and uvs)
+  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
+  if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs)   , gl.FLOAT, 2)) return -1;
+
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
   return indices.length;
 }
 
-function initVertexBuffersTorus(gl) { // Create a torus
+
+function initVertexBuffersCylinder(gl) { // Create a cylinder
+  var n = 170;
+  var r = 1.0;
+  var h = 1.4;
+
+  var vertices = [];
+  var uvs = [];
+  var normals = [];
+  var indices = [];
+   
+  var angleStep = 2 * Math.PI / n;
+  var bc = [0.0, 0.0, 0.0]; //centro base inferiore
+
+  //BASI
+  //Base INFERIORE
+  //faccio n+1 rotazioni così è più semplice calcolare gli indici per disegnare l'ultima faccia
+  //il consumo di di memoria è minimo (4 vertici) ma il codice è molto più chiaro e compatto
+  vertices.push(bc[0], bc[1], bc[2]); //centro base inferiore -> indice 0
+	normals.push(0.0, -1.0, 0.0);
+  uvs.push(0.5, 0.5);
+  
+  for(var i = 0; i <= n; i++) { //calcola i vertici inferiori
+    var angle = i * angleStep;
+
+	  vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[0] + r * Math.cos(angle));
+    normals.push(0.0, -1.0, 0.0);
+    uvs.push(0.5 + (r*Math.sin(angle))/2, 0.5 + (r*Math.cos(angle))/2);
+	} //ora ci sono 1 + n+1 = n+2 vertici
+  
+  //Base SUPERIORE
+	vertices.push(bc[0], bc[1] + h, bc[2]); //centro base superiore -> indice 1+n+1 = n+2
+  normals.push(0.0, 1.0, 0.0);
+  uvs.push(0.5, 0.5);
+  
+  for(var i = 0; i <= n; i++) { //calcola i vertici superiori
+    var angle = i * angleStep;
+
+		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
+		normals.push(0.0, 1.0, 0.0);
+    uvs.push(0.5 + (r*Math.sin(angle))/2, 0.5 + (r*Math.cos(angle))/2);
+	}
+
+  //SUPERFICIE LATERALE
+  //WebGL associa le normali ai vertici con lo stesso indice nel buffer object
+  //Bisogna inserirli più volte nel buffer object per poter usare più normali per lo stesso punto
+  for(var i = 0; i <= n; i++) { //indici iniziano da 1+(n+1)+1+(n+1) = 2n+4 = 2(n+2)
+    angle = i * angleStep;
+
+    //giù
+    vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[2] + r * Math.cos(angle));
+    normals.push(Math.sin(angle), 0.0, Math.cos(angle));
+    uvs.push(i/n, 0);
+    
+		//su
+    vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
+		normals.push(Math.sin(angle), 0.0, Math.cos(angle));
+    uvs.push(i/n, 1);
+	} 
+
+
+	//INDICI
+	//base inferiore
+	for (var i = 1; i <= n; i++) {
+    indices.push(0, i, i+1);
+   }
+
+	//base superiore
+	var TOP_FAN_OFFSET = n+2; //è anche l'indice del centro della base superiore
+	for(var i = 1; i <= n; i++) {
+    indices.push(TOP_FAN_OFFSET, TOP_FAN_OFFSET+i, TOP_FAN_OFFSET+i+1);
+   }
+
+  //superficie laterale
+  var SIDE_OFFSET = (n+2)*2;
+	for (i=0; i < 2*n; i++) {
+    indices.push(SIDE_OFFSET+i, SIDE_OFFSET+i+1, SIDE_OFFSET+i+2);
+  }
+  
+  
+  //SEND DATA TO SHADERS
+  // Write the vertex property to buffers (coordinates and uvs)
+  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(vertices), gl.FLOAT, 3)) return -1;
+  if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs), gl.FLOAT, 2)) return -1;
+
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
   return indices.length;
 }
+
+
+function initVertexBuffersSphere(gl) { // Create a sphere
+
+  //SEND DATA TO SHADERS
+  // Write the vertex property to buffers (coordinates and normals)
+  // Same data can be used for vertex and normal
+  // In order to make it intelligible, another buffer is prepared separately
+  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
+  if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs)   , gl.FLOAT, 2)) return -1;
+
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+  return indices.length;
+}
+
+
+function initVertexBuffersTorus(gl) { // Create a torus
+
+  //SEND DATA TO SHADERS
+  // Write the vertex property to buffers (coordinates and normals)
+  // Same data can be used for vertex and normal
+  // In order to make it intelligible, another buffer is prepared separately
+  if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
+  if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs)   , gl.FLOAT, 2)) return -1;
+
+  // Unbind the buffer object
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Write the indices to the buffer object
+  var indexBuffer = gl.createBuffer();
+  if (!indexBuffer) {
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+  return indices.length;
+}
+
 
 function initArrayBuffer(gl, attribute, data, type, num) {
   // Create a buffer object
@@ -296,7 +530,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
   return true;
 }
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 20.0;
+var ANGLE_STEP = 80.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
