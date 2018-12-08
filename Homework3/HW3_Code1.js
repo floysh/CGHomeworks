@@ -44,7 +44,7 @@ function main() {
 
   // Set the vertex coordinates, the color and the normal
   //TEST FUNZIONE
-  var n = initVertexBuffersCone(gl);
+  var n = initVertexBuffersCube(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
     return;
@@ -76,7 +76,7 @@ function main() {
 // creo una GUI con dat.gui
   var gui = new dat.GUI();
   // checkbox geometry
-  var geometria = {cube:false,cone:true,cylinder:false,sphere:false,torus:false};
+  var geometria = {cube:true,cone:false,cylinder:false,sphere:false,torus:false};
   //
   gui.add(geometria,'cube').onFinishChange(function(value) {
     // Fires when a controller loses focus.
@@ -276,8 +276,8 @@ function initVertexBuffersCube(gl) {
 
 
 function initVertexBuffersCone(gl) { // Create a cone
-  var p = [1.0, -0.6, 0.0]; //p[0] -> raggio r
-  var spike = [0.0, 1.5, 0.0];
+  var p = [1.2, -1.0, 0.0]; //p[0] -> raggio r
+  var spike = [0.0, 1.4, 0.0];
   var n = 100;
   var angleStep = 2* Math.PI / n;
 
@@ -325,7 +325,7 @@ function initVertexBuffersCone(gl) { // Create a cone
     points.push( p[0] *Math.sin(angle) + p[2] *Math.cos(angle));
 
     //Texture
-    uvs.push(0.5 + (p[0]*Math.cos(angle))/2 , 0.5 + (p[0]*Math.sin(angle))/2);
+    uvs.push(0.5 + Math.cos(angle)/2 , 0.5 + Math.sin(angle)/2);
     
     //Indici
     indices.push(BASE_OFFSET); //centro della base
@@ -359,7 +359,7 @@ function initVertexBuffersCone(gl) { // Create a cone
 function initVertexBuffersCylinder(gl) { // Create a cylinder
   var n = 170;
   var r = 1.0;
-  var h = 1.4;
+  var h = 1.8;
 
   var vertices = [];
   var uvs = [];
@@ -367,7 +367,7 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
   var indices = [];
    
   var angleStep = 2 * Math.PI / n;
-  var bc = [0.0, 0.0, 0.0]; //centro base inferiore
+  var bc = [0.0, -h/2, 0.0]; //centro base inferiore
 
   //BASI
   //Base INFERIORE
@@ -382,7 +382,7 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 	  vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[0] + r * Math.cos(angle));
     normals.push(0.0, -1.0, 0.0);
-    uvs.push(0.5 + (r*Math.sin(angle))/2, 0.5 + (r*Math.cos(angle))/2);
+    uvs.push(0.5 + Math.sin(angle)/2, 0.5 + Math.cos(angle)/2);
 	} //ora ci sono 1 + n+1 = n+2 vertici
   
   //Base SUPERIORE
@@ -395,7 +395,7 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
 		normals.push(0.0, 1.0, 0.0);
-    uvs.push(0.5 + (r*Math.sin(angle))/2, 0.5 + (r*Math.cos(angle))/2);
+    uvs.push(0.5 + Math.sin(angle)/2, 0.5 + Math.cos(angle)/2);
 	}
 
   //SUPERFICIE LATERALE
@@ -452,6 +452,47 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 
 function initVertexBuffersSphere(gl) { // Create a sphere
+  var r = 1.2;
+  var n = 70;
+
+  var angleStep = 2* Math.PI / n;
+  var points = [];
+  var uvs = [];
+  var indices = [];
+  var x,y,z;
+  
+  for (var i = 0; i <= n; i++) { //rotazione XY
+    var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+    var sinXY = Math.sin(angleXY);
+    var cosXY = Math.cos(angleXY);
+    for (var j = 0; j <= n; j++) { //rotazione Z
+      var angleZ = j * angleStep;
+      var sinZ = Math.sin(angleZ);
+      var cosZ = Math.cos(angleZ);
+
+      //Vertici
+      x = r * cosXY * sinZ;
+      z = r * sinXY * sinZ;
+      y = r * cosZ; //scambio y e z per tenere i poli in verticale
+
+      points.push(x,y,z)
+
+      //Texture
+      //uvs.push(sinXY/r, cosZ/r);
+      //uvs.push(0.5+x/(2*r), 0.5+y/(2*r));
+      uvs.push(-i/n, -j/n);
+
+      //Indici
+      var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
+      var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
+
+      //indices.push(i*n+j) //test punti
+      if (i < n && j < n) { //mi fermo prima altrimenti drawElements va fuori dal buffer
+        indices.push(p1, p2, p1 + 1);
+        indices.push(p1 + 1, p2, p2 + 1);
+      }
+    }
+  }
 
   //SEND DATA TO SHADERS
   // Write the vertex property to buffers (coordinates and normals)
@@ -477,11 +518,50 @@ function initVertexBuffersSphere(gl) { // Create a sphere
 
 
 function initVertexBuffersTorus(gl) { // Create a torus
+  var Rhole = 1.0;
+  var r = 0.3;
+  var n = 60;
+
+  var angleStep = 2* Math.PI / n;
+  var points = [];
+  var uvs = [];
+  var indices = [];
+  var x,y,z;
+  
+
+  for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
+    var angleTHETA = i * angleStep;
+    var sinTHETA = Math.sin(angleTHETA);
+    var cosTHETA = Math.cos(angleTHETA);
+    for (var j = 0; j <= n; j++) { //rotazione pti sull'anello
+      var anglePHI = j * angleStep;
+      var sinPHI = Math.sin(anglePHI);
+      var cosPHI = Math.cos(anglePHI);
+
+      //Vertici
+      x = (Rhole + r * cosPHI) * cosTHETA;
+      y = (Rhole + r * cosPHI) * sinTHETA;
+      z = r * sinPHI;
+
+      points.push(x,y,z);
+
+      //Texture
+      uvs.push(i/n, j/n);
+
+      //Indici
+      var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
+      var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
+
+      //indices.push(i*n+j) //test punti
+      if (i < n && j < n) { //mi fermo prima altrimenti drawElements va fuori dal buffer
+        indices.push(p1, p2, p1 + 1);
+        indices.push(p1 + 1, p2, p2 + 1);
+      }
+    }
+  }
 
   //SEND DATA TO SHADERS
-  // Write the vertex property to buffers (coordinates and normals)
-  // Same data can be used for vertex and normal
-  // In order to make it intelligible, another buffer is prepared separately
+  // Write the vertex property to buffers (coordinates and uvs)
   if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
   if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs)   , gl.FLOAT, 2)) return -1;
 
