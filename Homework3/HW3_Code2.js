@@ -114,7 +114,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX (calcola ma non passa agli shader perchè non serve per texture mappping)
-    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     //gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     

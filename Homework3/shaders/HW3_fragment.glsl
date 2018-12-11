@@ -28,12 +28,9 @@ void main() {
     float nDotL = max(dot(lightDirection, v_normal), 0.0);
 
     // Calculate the color due to diffuse reflection
-    //vec3 kD = vec3(0.5, 0.47, 0.2);
     vec3 kD = texture.rgb; //use texture color as DiffuseMaterial
-    vec3 diffuse = kD * v_LightColor * nDotL;
+    vec3 diffuse = v_LightColor * kD * nDotL;
 
-    // Add the surface colors due to diffuse reflection
-    //vec4 lighting = vec4(atten*diffuse, 1.0);
-    vec4 lighting = vec4(diffuse, 1.0);
-    gl_FragColor = normalize(lighting + texture);
+    // Add the surface colors due to diffuse reflection and texture as a material
+    gl_FragColor = vec4(diffuse, 1.0); 
 }

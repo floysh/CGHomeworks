@@ -33,7 +33,7 @@ function main() {
   var canvas = document.getElementById('webgl');
 
   
-  //Resize canvas along withthe browser window's size
+  //Resize canvas along with the browser window's size
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   function resize() {
@@ -782,10 +782,10 @@ function initTextures(gl) {
   // Register the event handler to be called on loading an image
   image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
   // Tell the browser to load an image
-  image.src = './textures/ash_uvgrid01.jpg';
-  image.src = './textures/03a.jpg';
   image.src = './textures/lightingtest.png';
-
+  image.src = './textures/03a.jpg';
+  image.src = './textures/ash_uvgrid01.jpg';
+  
   return true;
 }
 
