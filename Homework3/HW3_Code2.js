@@ -2,10 +2,9 @@
 // HW3_Code2.js
 // Implementazione del Texture Mapping sulla superficie interna di una semifera
 // GDD - 2017
-
-// Vertex shader program
 "use strict";
 
+// Vertex shader program
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n'   +
   'uniform mat4 u_MvpMatrix;\n'    +
@@ -30,6 +29,32 @@ var FSHADER_SOURCE =
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
+  
+  //Resize canvas along with the browser window's size
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  function resize() {
+    var canvas = document.getElementById('webgl');
+    var canvasRatio = canvas.height / canvas.width;
+    var windowRatio = window.innerHeight / window.innerWidth;
+    var width;
+    var height;
+    
+    //do not stretch the canvas image!
+    if (windowRatio < canvasRatio) {
+        height = window.innerHeight;
+        width = height / canvasRatio;
+    } 
+    else {
+        width = window.innerWidth;
+        height = width * canvasRatio;
+    }
+
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+  };
+  window.addEventListener('load', resize, false);
+  window.addEventListener('resize', resize, false);
 
  // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);

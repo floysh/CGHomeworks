@@ -1,9 +1,10 @@
+// Studente: Davide Civolani       MAT: 121425
 // HW3_Code1.js
-// implementazione texture mapping
+// Implementazione Texture Mapping
 // GDD - 2017
-// Vertex shader program
 "use strict";
 
+// Vertex shader program
 var VSHADER_SOURCE =
   'attribute vec4 a_Position;\n'   +
   'uniform mat4 u_MvpMatrix;\n'    +
@@ -28,6 +29,32 @@ var FSHADER_SOURCE =
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
+  
+  //Resize canvas along with the browser window's size
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  function resize() {
+    var canvas = document.getElementById('webgl');
+    var canvasRatio = canvas.height / canvas.width;
+    var windowRatio = window.innerHeight / window.innerWidth;
+    var width;
+    var height;
+    
+    //do not stretch the canvas image!
+    if (windowRatio < canvasRatio) {
+        height = window.innerHeight;
+        width = height / canvasRatio;
+    } 
+    else {
+        width = window.innerWidth;
+        height = width * canvasRatio;
+    }
+
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+  };
+  window.addEventListener('load', resize, false);
+  window.addEventListener('resize', resize, false);
 
  // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -42,8 +69,8 @@ function main() {
     return;
   }
 
-  // Set the vertex coordinates, the color and the normal
   //TEST FUNZIONE
+  // Set the vertex coordinates and uvs
   var n = initVertexBuffersCube(gl);
   if (n < 0) {
     console.log('Failed to set the vertex information');
@@ -72,8 +99,8 @@ function main() {
   var cameraPos = [1,3,8];          // camera position
   //********************************************************************************************
   
-  //********************************************************************************************
-// creo una GUI con dat.gui
+//********************************************************************************************
+  // creo una GUI con dat.gui
   var gui = new dat.GUI();
   // checkbox geometry
   var geometria = {cube:true,cone:false,cylinder:false,sphere:false,torus:false};
@@ -180,36 +207,47 @@ function main() {
         gui.__controllers[i].updateDisplay();
       }
   });  
-  //*********************************************************************************************
+ //*********************************************************************************************
 
-  var currentAngle = 0.0;           // Current rotation angle
+  var currentAngle = 0.0;         // Current rotation angle
   var vpMatrix = new Matrix4();   // View projection matrix
 
   // Calculate the view projection matrix
   vpMatrix.setPerspective(30, canvas.width/canvas.height, 1, 100);
   vpMatrix.lookAt(cameraPos[0],cameraPos[1],cameraPos[2], 0, 0, 0, 0, 1, 0);
 
-  var modelMatrix = new Matrix4();  // Model matrix
-  var mvpMatrix = new Matrix4(); 　  // Model view projection matrix
-  var normalMatrix = new Matrix4(); // Transformation matrix for normals
+  var modelMatrix = new Matrix4();    // Model matrix
+  var mvpMatrix = new Matrix4();      // Model-View-Projection matrix
+  var normalMatrix = new Matrix4();   // Transformation matrix for normals
 
   var tick = function() {
-	currentAngle = animate(currentAngle);  // Update the rotation angle
+    currentAngle = animate(currentAngle);  // Update the rotation angle
 
-	// Calculate the model matrix
-	modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    // Calculate the MODEL MATRIX (calcola ma non passa agli shader perchè non serve per texture mappping)
+    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    // Pass the model matrix to u_ModelMatrix
+    //gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    
+    // Calculate the MODEL-VIEW-PROJECTION MATRIX
+    mvpMatrix.set(vpMatrix).multiply(modelMatrix);
+    // Pass the model-view-projection matrix to u_MvpMatrix
+    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    
+    /* Non servono le normali per il texture mapping!
+    
+    // Calculate the MATRIX TO TRANSFORM THE NORMALS based on the model matrix
+    normalMatrix.setInverseOf(modelMatrix);
+    normalMatrix.transpose();
+    // Pass the transformation matrix for normals to u_NormalMatrix
+    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements); */
 
-	mvpMatrix.set(vpMatrix).multiply(modelMatrix);
-	// Pass the model view projection matrix to u_MvpMatrix
-	gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    // Clear color and depth buffer
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	// Clear color and depth buffer
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Draw the cube(Note that the 3rd argument is the gl.UNSIGNED_SHORT)
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
 
-	// Draw the cube(Note that the 3rd argument is the gl.UNSIGNED_SHORT)
-	gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_SHORT, 0);
-
-	requestAnimationFrame(tick, canvas); // Request that the browser ?calls tick
+    requestAnimationFrame(tick, canvas); // Request that the browser calls tick
   };
   tick();
 }
@@ -474,7 +512,6 @@ function initVertexBuffersSphere(gl) { // Create a sphere
       x = r * cosXY * sinZ;
       z = r * sinXY * sinZ;
       y = r * cosZ; //scambio y e z per tenere i poli in verticale
-
       points.push(x,y,z)
 
       //Texture
@@ -542,7 +579,6 @@ function initVertexBuffersTorus(gl) { // Create a torus
       x = (Rhole + r * cosPHI) * cosTHETA;
       y = (Rhole + r * cosPHI) * sinTHETA;
       z = r * sinPHI;
-
       points.push(x,y,z);
 
       //Texture
@@ -605,6 +641,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
 
   return true;
 }
+
 // Rotation angle (degrees/second)
 var ANGLE_STEP = 80.0;
 // Last time that this function was called
