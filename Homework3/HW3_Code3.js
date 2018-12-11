@@ -32,13 +32,40 @@ function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
 
- // Get the rendering context for WebGL
-  var gl = getWebGLContext(canvas);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
-  }
+  
+  //Resize canvas along withthe browser window's size
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  function resize() {
+    var canvas = document.getElementById('webgl');
+    var canvasRatio = canvas.height / canvas.width;
+    var windowRatio = window.innerHeight / window.innerWidth;
+    var width;
+    var height;
+    
+    //do not stretch the canvas image!
+    if (windowRatio < canvasRatio) {
+      height = window.innerHeight;
+      width = height / canvasRatio;
+    } 
+    else {
+      width = window.innerWidth;
+      height = width * canvasRatio;
+    }
+    
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+  };
+  window.addEventListener('load', resize, false);
+  window.addEventListener('resize', resize, false);
 
+  // Get the rendering context for WebGL
+   var gl = getWebGLContext(canvas);
+   if (!gl) {
+     console.log('Failed to get the rendering context for WebGL');
+     return;
+   }
+  
   // Initialize shaders
   /* VSHADER_SOURCE = loadShaderFromFile("shaders/phong_vertex.glsl");
   FSHADER_SOURCE = loadShaderFromFile("shaders/phong_fragment.glsl"); */
@@ -48,7 +75,7 @@ function main() {
     console.log('Failed to intialize shaders.');
     return;
   }
-
+  
   // Set texture
   if (!initTextures(gl)) {
     console.log('Failed to intialize the texture.');
@@ -81,6 +108,7 @@ function main() {
   gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0);
   // Set the light direction (in the world coordinate)
   gl.uniform3f(u_LightPosition, 1.0, 2.0, 12.0);
+  //gl.uniform3f(u_LightPosition, cameraPos[0],cameraPos[1],cameraPos[2]); //TEST
 
   //TEST FUNZIONE
   // Set the vertex coordinates, uvs and normals
@@ -215,7 +243,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX
-    modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -314,17 +342,20 @@ function initVertexBuffersCube(gl) {
 
 
 function initVertexBuffersCone(gl) { // Create a cone
-  var p = [1.2, -1.0, 0.0]; //p[0] -> raggio r
-  var spike = [0.0, 1.4, 0.0];
+  var r = 2.2; 
+  var h = 2.4;
   var n = 100;
-  var angleStep = 2* Math.PI / n;
 
+  var angleStep = 2* Math.PI / n;
+  var p = [h-1, -1.0, 0.0];
+  var spike = [0.0, p[1]+h, 0.0]; //asse cono = asse y
+  
   var points = [];
   var uvs = [];
   var normals = [];
   var indices = [];
-
-
+  
+  
   //SUPERFICIE LATERALE
   //La punta viene replicata ad ogni step per poter mantenere "dritta" la texture
   for (var i=0; i <= n; i++) {
@@ -342,9 +373,17 @@ function initVertexBuffersCone(gl) { // Create a cone
     uvs.push(i/n, 1);
 
     //Normali
-    var alpha = Math.atan((spike[1]-p[1])/p[0]); //h = spike[1]-p[1]
-    normals.push(Math.cos(angle)*Math.cos(alpha), Math.sin(angle)*Math.cos(alpha), Math.sin(angle));
-    normals.push(0, 1, 0);
+    var l = Math.sqrt(h*h + r*r);
+    var alpha = Math.atan(h/r); //angolo formato dal pto col raggio della base
+    x = r * Math.cos(angle);
+    y = Math.sin(alpha);
+    z = r * Math.sin(angle);
+
+    var norm2 = Math.sqrt(x*x + y*y + z*z);
+    
+    //normals.push(Math.cos(angle)*Math.cos(alpha), Math.sin(angle)*Math.cos(alpha), Math.sin(angle));
+    normals.push(x/norm2, y/norm2, z/norm2);
+    normals.push(x/norm2, y/norm2, z/norm2); //la base superiore è degenere, mantengo le normali della superficie curva
 
     //Indices
     indices.push(2*i, 2*i+1, 2*i+2);
@@ -590,11 +629,17 @@ function initVertexBuffersTorus(gl) { // Create a torus
   var uvs = [];
   var indices = [];
   
-
+  var p = [Rhole+r, 0, 0];
   for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
     var angleTHETA = i * angleStep;
     var sinTHETA = Math.sin(angleTHETA);
     var cosTHETA = Math.cos(angleTHETA);
+    
+    //centro del cerchio (per le normali)
+    var cx = p[0] *Math.cos(angleTHETA) - p[2] *Math.sin(angleTHETA);
+    var cy = p[1];
+    var cz = p[0] *Math.sin(angleTHETA) + p[2] *Math.cos(angleTHETA);
+
     for (var j = 0; j <= n; j++) { //rotazione pti sull'anello
       var anglePHI = j * angleStep;
       var sinPHI = Math.sin(anglePHI);
@@ -604,12 +649,42 @@ function initVertexBuffersTorus(gl) { // Create a torus
       var x = (Rhole + r * cosPHI) * cosTHETA;
       var y = (Rhole + r * cosPHI) * sinTHETA;
       var z = r * sinPHI;
-
       points.push(x,y,z);
-
+      //points.push(x-cx,y-cy,z-cz); //ehm figura strana :/
+      
       //Normali
-      //normals.push(x, y, z);
-      normals.push(sinTHETA,cosPHI,cosTHETA);
+      //Metodo analitico che non funzia :/
+      /* //tangente rispetto al buco
+      var tx = -sinPHI;
+      var ty = cosPHI;
+      var tz = 0;
+      //tangente rispetto alla crf dell'anello
+      var sx = -sinTHETA*cosPHI;
+      var sy = -sinTHETA*sinPHI
+      var sz = cosTHETA;
+      //la normale al pto sull'anello è il prodotto vett. delle due tangenti
+      x = ty*sz - tz*sy;
+      y = tz*sx - tx*sz;
+      z = tx*sy - ty*sx;
+      var norm2 = Math.sqrt(x*x + y*y + z*z);
+      normals.push(x/norm2, y/norm2, z/norm2) */;
+
+      //Alternativa ottenuta non si sa come ma funzionante :D
+      // Forse col metodo delle derivate parziali?
+      // Origine: https://www.gamedev.net/forums/topic/437251-calculate-surface-normal-vector/
+      //<TODO> Verifica che la formula risulti con le derivate parziali agli angoli
+      x = (r * cosPHI) * cosTHETA;
+      y = (r * cosPHI) * sinTHETA;
+      z = r * sinPHI;
+      var norm2 = Math.sqrt(x*x + y*y + z*z);
+      normals.push(x/norm2,y/norm2,z/norm2);
+
+      //Prime prove che ovviamente non funzionano
+      //var norm2 = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy) + (z-cz)*(z-cz));
+      //console.log("r="+r+" norm2="+norm2);
+      //normals.push(r*sinTHETA, Rhole*cosPHI, r*cosTHETA);
+      //normals.push((x-cx)/r, (y-cy)/r, (z-cz)/r);
+      //normals.push(x/norm2, y/norm2, z/norm2);
 
       //Texture
       uvs.push(i/n, j/n);
