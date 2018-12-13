@@ -30,31 +30,32 @@ function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
   
-  //Resize canvas along with the browser window's size
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  function resize() {
-    var canvas = document.getElementById('webgl');
-    var canvasRatio = canvas.height / canvas.width;
-    var windowRatio = window.innerHeight / window.innerWidth;
-    var width;
-    var height;
-    
-    //do not stretch the canvas image!
-    if (windowRatio < canvasRatio) {
-        height = window.innerHeight;
-        width = height / canvasRatio;
-    } 
-    else {
-        width = window.innerWidth;
-        height = width * canvasRatio;
-    }
-
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-  };
-  window.addEventListener('load', resize, false);
-  window.addEventListener('resize', resize, false);
+    //Estende la canvas per occupare più spazio possibile nella finestra
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    //ridimensiona canvas insieme alla finestra
+    function resize() {
+      var canvas = document.getElementById('webgl');
+      var canvasRatio = canvas.height / canvas.width;
+      var windowRatio = window.innerHeight / window.innerWidth;
+      var width;
+      var height;
+      
+      //mantiene l'aspect ratio al ridimensionamento
+      if (windowRatio < canvasRatio) {
+          height = window.innerHeight;
+          width = height / canvasRatio;
+      } 
+      else {
+          width = window.innerWidth;
+          height = width * canvasRatio;
+      }
+  
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+    };
+    window.addEventListener('load', resize, false);
+    window.addEventListener('resize', resize, false);
 
  // Get the rendering context for WebGL
   var gl = getWebGLContext(canvas);
@@ -169,8 +170,8 @@ function initVertexBuffersSemiSphere(gl) { // Create a semisphere
       points.push(x,y,z)
 
       //Texture
-      //inverto l'asse u per mappare correttamente la texture all'interno dell'oggetto
-      uvs.push(i/n, -j/n);
+      //Indici u invertiti rispetto alla sfera completa per "ribaltare" la texture in orizzontale
+      uvs.push(i/n, 1-j/n);
 
       //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
@@ -264,7 +265,9 @@ function initTextures(gl) {
   image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
   // Tell the browser to load an image
   image.src = './textures/ash_uvgrid01.jpg'; //TEST
+  image.src = './textures/02a.jpg'; //non funzia :(
   image.src = './textures/03a.jpg';
+  
   return true;
 }
 

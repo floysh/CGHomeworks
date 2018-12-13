@@ -30,9 +30,10 @@ function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
   
-  //Resize canvas along with the browser window's size
+  //Estende la canvas per occupare più spazio possibile nella finestra
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  //ridimensiona canvas insieme alla finestra
   function resize() {
     var canvas = document.getElementById('webgl');
     var canvasRatio = canvas.height / canvas.width;
@@ -40,7 +41,7 @@ function main() {
     var width;
     var height;
     
-    //do not stretch the canvas image!
+    //mantiene l'aspect ratio al ridimensionamento
     if (windowRatio < canvasRatio) {
         height = window.innerHeight;
         width = height / canvasRatio;
@@ -224,7 +225,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX (calcola ma non passa agli shader perchè non serve per texture mappping)
-    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 0, 1, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     //gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -491,20 +492,20 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 function initVertexBuffersSphere(gl) { // Create a sphere
   var r = 1.2;
-  var n = 70;
+  var n = 100;
 
-  var angleStep = 2* Math.PI / n;
+  var angleStep = Math.PI / n;
   var points = [];
   var uvs = [];
   var indices = [];
   var x,y,z;
   
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+    var angleXY = i * 2*Math.PI/n;
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
     for (var j = 0; j <= n; j++) { //rotazione Z
-      var angleZ = j * angleStep;
+      var angleZ = j * angleStep; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
@@ -515,9 +516,9 @@ function initVertexBuffersSphere(gl) { // Create a sphere
       points.push(x,y,z)
 
       //Texture
-      //uvs.push(sinXY/r, cosZ/r);
-      //uvs.push(0.5+x/(2*r), 0.5+y/(2*r));
-      uvs.push(-i/n, -j/n);
+      var u = 1-i/n; 
+      var v = 1-j/n; 
+      uvs.push(u, v);
 
       //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
@@ -532,9 +533,7 @@ function initVertexBuffersSphere(gl) { // Create a sphere
   }
 
   //SEND DATA TO SHADERS
-  // Write the vertex property to buffers (coordinates and normals)
-  // Same data can be used for vertex and normal
-  // In order to make it intelligible, another buffer is prepared separately
+  // Write the vertex property to buffers (coordinates and uvs)
   if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
   if (!initArrayBuffer(gl, 'a_TexCoord', new Float32Array(uvs)   , gl.FLOAT, 2)) return -1;
 
@@ -679,6 +678,7 @@ function initTextures(gl) {
   // Tell the browser to load an image
   image.src = './textures/ash_uvgrid01.jpg';
 
+
   return true;
 }
 
@@ -690,7 +690,7 @@ function loadTexture(gl, texture, u_Sampler, image) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // Set the texture parameters
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   // Set the texture image
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
   

@@ -33,32 +33,32 @@ function main() {
   var canvas = document.getElementById('webgl');
 
   
-  //Resize canvas along with the browser window's size
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  function resize() {
-    var canvas = document.getElementById('webgl');
-    var canvasRatio = canvas.height / canvas.width;
-    var windowRatio = window.innerHeight / window.innerWidth;
-    var width;
-    var height;
-    
-    //do not stretch the canvas image!
-    if (windowRatio < canvasRatio) {
-      height = window.innerHeight;
-      width = height / canvasRatio;
-    } 
-    else {
-      width = window.innerWidth;
-      height = width * canvasRatio;
-    }
-    
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-  };
-  window.addEventListener('load', resize, false);
-  window.addEventListener('resize', resize, false);
-
+   //Estende la canvas per occupare più spazio possibile
+   canvas.width = window.innerWidth;
+   canvas.height = window.innerHeight;
+   //ridimensiona canvas insieme alla finestra
+   function resize() {
+     var canvas = document.getElementById('webgl');
+     var canvasRatio = canvas.height / canvas.width;
+     var windowRatio = window.innerHeight / window.innerWidth;
+     var width;
+     var height;
+     
+     //mantiene l'aspect ratio al ridimensionamento
+     if (windowRatio < canvasRatio) {
+         height = window.innerHeight;
+         width = height / canvasRatio;
+     } 
+     else {
+         width = window.innerWidth;
+         height = width * canvasRatio;
+     }
+ 
+     canvas.style.width = width + 'px';
+     canvas.style.height = height + 'px';
+   };
+   window.addEventListener('load', resize, false);
+   window.addEventListener('resize', resize, false);
   // Get the rendering context for WebGL
    var gl = getWebGLContext(canvas);
    if (!gl) {
@@ -243,7 +243,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX
-    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -342,13 +342,13 @@ function initVertexBuffersCube(gl) {
 
 
 function initVertexBuffersCone(gl) { // Create a cone
-  var r = 2.2; 
+  var r = 1.2;
   var h = 2.4;
   var n = 100;
 
   var angleStep = 2* Math.PI / n;
-  var p = [h-1, -1.0, 0.0];
-  var spike = [0.0, p[1]+h, 0.0]; //asse cono = asse y
+  var p = [r, -1.0, 0.0];
+  var spike = [0.0, h-p[1], 0.0]; //asse cono = asse y
   
   var points = [];
   var uvs = [];
@@ -366,7 +366,7 @@ function initVertexBuffersCone(gl) { // Create a cone
 
     //Coordinate
     points.push(x, y, z);
-    points.push(spike[0], spike[1], spike[2]);
+    points.push(spike[0], spike[1]-2, spike[2]);
     
     //Texture
     uvs.push(i/n, 0);
@@ -376,7 +376,7 @@ function initVertexBuffersCone(gl) { // Create a cone
     var l = Math.sqrt(h*h + r*r);
     var alpha = Math.atan(h/r); //angolo formato dal pto col raggio della base
     x = r * Math.cos(angle);
-    y = Math.sin(alpha);
+    y = Math.cos(alpha); //se alpha = PI/2 -> cilindro -> y = 0;
     z = r * Math.sin(angle);
 
     var norm2 = Math.sqrt(x*x + y*y + z*z);
@@ -545,18 +545,18 @@ function initVertexBuffersSphere(gl) { // Create a sphere
   var r = 1.5;
   var n = 70;
 
-  var angleStep = 2* Math.PI / n;
+  var angleStep = Math.PI / n;
   var points = [];
   var normals = [];
   var uvs = [];
   var indices = [];
   
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+    var angleXY = i * 2*angleStep
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
     for (var j = 0; j <= n; j++) { //rotazione Z
-      var angleZ = j * angleStep;
+      var angleZ = j * angleStep; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
@@ -575,12 +575,9 @@ function initVertexBuffersSphere(gl) { // Create a sphere
       
       //Ma questa sfera è centrata nell'origine     -> normale = pto/r
       normals.push(x/r, y/r, z/r);
-      //nota che la formula generale e' equivalente a
-      //var norm2 = Math.sqrt((x-c[0])*(x-c[0]) + (y-c[0])*(y-c[0]) + (z-c[0])*(z-c[0]));
-      //normals.push((x-c[0])/norm2, (y-c[0])/norm2, (z-c[0])/norm2);
     
       //Texture
-      uvs.push(-i/n, j/n); //Inverto le v per mantenere "dritta" la texture sulla sup. esterna
+      uvs.push(1-i/n, 1-j/n); //Inverto le coordinate per mantenere "dritta" la texture sulla sup. esterna
 
       //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
@@ -653,38 +650,20 @@ function initVertexBuffersTorus(gl) { // Create a torus
       //points.push(x-cx,y-cy,z-cz); //ehm figura strana :/
       
       //Normali
-      //Metodo analitico che non funzia :/
-      /* //tangente rispetto al buco
-      var tx = -sinPHI;
-      var ty = cosPHI;
-      var tz = 0;
-      //tangente rispetto alla crf dell'anello
-      var sx = -sinTHETA*cosPHI;
-      var sy = -sinTHETA*sinPHI
-      var sz = cosTHETA;
-      //la normale al pto sull'anello è il prodotto vett. delle due tangenti
-      x = ty*sz - tz*sy;
-      y = tz*sx - tx*sz;
-      z = tx*sy - ty*sx;
-      var norm2 = Math.sqrt(x*x + y*y + z*z);
-      normals.push(x/norm2, y/norm2, z/norm2) */;
-
-      //Alternativa ottenuta non si sa come ma funzionante :D
-      // Forse col metodo delle derivate parziali?
-      // Origine: https://www.gamedev.net/forums/topic/437251-calculate-surface-normal-vector/
-      //<TODO> Verifica che la formula risulti con le derivate parziali agli angoli
-      x = (r * cosPHI) * cosTHETA;
-      y = (r * cosPHI) * sinTHETA;
-      z = r * sinPHI;
-      var norm2 = Math.sqrt(x*x + y*y + z*z);
-      normals.push(x/norm2,y/norm2,z/norm2);
-
-      //Prime prove che ovviamente non funzionano
-      //var norm2 = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy) + (z-cz)*(z-cz));
-      //console.log("r="+r+" norm2="+norm2);
-      //normals.push(r*sinTHETA, Rhole*cosPHI, r*cosTHETA);
-      //normals.push((x-cx)/r, (y-cy)/r, (z-cz)/r);
+      
+      // Alternativa casalinga al metodo delle derivate parziali alle eq parametriche
+      // Idea originale: https://www.gamedev.net/forums/topic/437251-calculate-surface-normal-vector/ (Zipster, 3o post)
+      // Possiamo visualizzare le normali a una superficie toroidale come un toro con raggio dell'anello = 1
+      // Il loro orientamento nello spazio non cambia al variare del raggio del buco, perciò
+      // se le applichiamo tutte all'origine esse descrivono una sfera unitaria (in realtà, due sfere sovrapposte)
+      // Possiamo quindi usare l'equazione parametrica della sfera per trovarle.
+      // Inoltre fissando r=1.0 evitiamo di dover normalizzare il vettore risultante
+      x = (1.0 * cosPHI) * cosTHETA; //metto r = 1.0 per rendere più chiara la formula
+      y = (1.0 * cosPHI) * sinTHETA;
+      z = 1.0 * sinPHI;
+      //var norm2 = Math.sqrt(x*x + y*y + z*z); //se r=1, non serve la normalizzazione
       //normals.push(x/norm2, y/norm2, z/norm2);
+      normals.push(x, y, z);
 
       //Texture
       uvs.push(i/n, j/n);
