@@ -243,7 +243,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX
-    modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -341,6 +341,7 @@ function initVertexBuffersCube(gl) {
 }
 
 
+
 function initVertexBuffersCone(gl) { // Create a cone
   var r = 1.2;
   var h = 2.4;
@@ -359,12 +360,12 @@ function initVertexBuffersCone(gl) { // Create a cone
   //SUPERFICIE LATERALE
   //La punta viene replicata ad ogni step per poter mantenere "dritta" la texture
   for (var i=0; i <= n; i++) {
-    var angle = -i*angleStep;
-    var x = p[0] *Math.cos(angle) - p[2] *Math.sin(angle);
-    var y = p[1];
-    var z = p[0] *Math.sin(angle) + p[2] *Math.cos(angle);
+    var angle = i* angleStep;
 
     //Coordinate
+    var x = r * Math.sin(angle);
+    var y = p[1];
+    var z = r * Math.cos(angle);    
     points.push(x, y, z);
     points.push(spike[0], spike[1]-2, spike[2]);
     
@@ -372,18 +373,16 @@ function initVertexBuffersCone(gl) { // Create a cone
     uvs.push(i/n, 0);
     uvs.push(i/n, 1);
 
-    //Normali
-    var l = Math.sqrt(h*h + r*r);
-    var alpha = Math.atan(h/r); //angolo formato dal pto col raggio della base
-    x = r * Math.cos(angle);
-    y = Math.cos(alpha); //se alpha = PI/2 -> cilindro -> y = 0;
-    z = r * Math.sin(angle);
 
-    var norm2 = Math.sqrt(x*x + y*y + z*z);
-    
-    //normals.push(Math.cos(angle)*Math.cos(alpha), Math.sin(angle)*Math.cos(alpha), Math.sin(angle));
-    normals.push(x/norm2, y/norm2, z/norm2);
-    normals.push(x/norm2, y/norm2, z/norm2); //la base superiore è degenere, mantengo le normali della superficie curva
+    //Normali
+    var alpha = Math.atan(h/r); //angolo formato dal lato col raggio della base
+    var b = Math.sin(alpha);    //base del triangolo formato da normale e raggio della base
+    x = b * Math.sin(angle);
+    y = Math.cos(alpha); //se alpha = PI/2 -> cilindro -> y = 0;
+    z = b * Math.cos(angle);
+
+    normals.push(x, y, z);
+    normals.push(x, y, z);
 
     //Indices
     indices.push(2*i, 2*i+1, 2*i+2);
@@ -405,9 +404,10 @@ function initVertexBuffersCone(gl) { // Create a cone
     var angle = i*angleStep;
 
     //Coordinate
-    points.push( p[0] *Math.cos(angle) - p[2] *Math.sin(angle));
-    points.push( p[1]);
-    points.push( p[0] *Math.sin(angle) + p[2] *Math.cos(angle));
+    var x = r * Math.cos(angle);
+    var y = p[1];
+    var z = r * Math.sin(angle);
+    points.push(x, y, z);
 
     //Texture
     uvs.push(0.5 + Math.cos(angle)/2 , 0.5 + Math.sin(angle)/2);
@@ -444,7 +444,6 @@ function initVertexBuffersCone(gl) { // Create a cone
   return indices.length;
 }
 
-
 function initVertexBuffersCylinder(gl) { // Create a cylinder
   var n = 170;
   var r = 1.0;
@@ -469,9 +468,9 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
   for(var i = 0; i <= n; i++) { //calcola i vertici inferiori
     var angle = i * angleStep;
 
-	  vertices.push(bc[0] + r * Math.sin(angle), bc[1], bc[0] + r * Math.cos(angle));
+	  vertices.push(bc[0] + r * Math.cos(angle), bc[1], bc[0] + r * Math.sin(angle));
     normals.push(0.0, -1.0, 0.0);
-    uvs.push(0.5 + Math.sin(angle)/2, 0.5 + Math.cos(angle)/2);
+    uvs.push(0.5 + Math.cos(angle)/2, 0.5 + Math.sin(angle)/2);
 	} //ora ci sono 1 + n+1 = n+2 vertici
   
   //Base SUPERIORE
@@ -482,9 +481,9 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
   for(var i = 0; i <= n; i++) { //calcola i vertici superiori
     var angle = i * angleStep;
 
-		vertices.push(bc[0] + r * Math.sin(angle), bc[1]+h, bc[2] + r * Math.cos(angle));
+		vertices.push(bc[0] + r * Math.cos(angle), bc[1]+h, bc[2] + r * Math.sin(angle));
 		normals.push(0.0, 1.0, 0.0);
-    uvs.push(0.5 + Math.sin(angle)/2, 0.5 + Math.cos(angle)/2);
+    uvs.push(0.5 + Math.cos(angle)/2, 0.5 - Math.sin(angle)/2);
 	}
 
   //SUPERFICIE LATERALE
@@ -761,8 +760,8 @@ function initTextures(gl) {
   // Register the event handler to be called on loading an image
   image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
   // Tell the browser to load an image
-  image.src = './textures/lightingtest.png';
   image.src = './textures/03a.jpg';
+  image.src = './textures/lightingtest.png';
   image.src = './textures/ash_uvgrid01.jpg';
   
   return true;
