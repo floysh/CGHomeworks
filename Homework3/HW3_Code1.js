@@ -225,7 +225,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX (calcola ma non passa agli shader perchè non serve per texture mappping)
-    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     //gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -315,25 +315,28 @@ function initVertexBuffersCube(gl) {
 
 
 function initVertexBuffersCone(gl) { // Create a cone
-  var p = [0.0, -1.0, 1.2]; //p[2] -> raggio r
-  var spike = [0.0, 1.4, 0.0];
+  var r = 1.2;
+  var h = 2.4;
   var n = 100;
-  var angleStep = 2* Math.PI / n;
 
+  var angleStep = 2* Math.PI / n;
+  var base_y = -1.0; //distanza della base dall'origine
+  var spike = [0.0, base_y+h, 0.0]; //asse cono = asse y
+  
   var points = [];
   var uvs = [];
   var indices = [];
-
-
+  
+  
   //SUPERFICIE LATERALE
   //La punta viene replicata ad ogni step per poter mantenere "dritta" la texture
   for (var i=0; i <= n; i++) {
-    var angle = -i*angleStep;
-    var x = p[0] *Math.cos(angle) - p[2] *Math.sin(angle);
-    var y = p[1];
-    var z = p[0] *Math.sin(angle) + p[2] *Math.cos(angle);
+    var angle = i* angleStep;
 
     //Coordinate
+    var x = r * Math.sin(angle);
+    var y = base_y;
+    var z = r * Math.cos(angle);
     points.push(x, y, z);
     points.push(spike[0], spike[1], spike[2]);
     
@@ -351,7 +354,7 @@ function initVertexBuffersCone(gl) { // Create a cone
   var BASE_OFFSET = n*2+2;
 
   //inserisco centro
-  points.push(spike[0], p[1], spike[2]);
+  points.push(spike[0], base_y, spike[2]);
   uvs.push(0.5, 0.5);
 
   //Inserisco gli altri punti (stesse coordinate della sup. laterale)
@@ -359,14 +362,13 @@ function initVertexBuffersCone(gl) { // Create a cone
     var angle = i*angleStep;
 
     //Coordinate
-    points.push( p[0] *Math.cos(angle) - p[2] *Math.sin(angle));
-    points.push( p[1]);
-    points.push( p[0] *Math.sin(angle) + p[2] *Math.cos(angle));
+    var x = r * Math.cos(angle);
+    var y = base_y;
+    var z = r * Math.sin(angle);
+    points.push(x, y, z);
 
     //Texture
-    //scambio sin e cos per orientare correttamente la texture rispetto al punto di giunzione (ruotata di 90 gradi)
-    //u invertite per disegnare la texture nel verso giusto sulla faccia inferiore del cerchio
-    uvs.push(0.5 - Math.sin(angle)/2 , 0.5 + Math.cos(angle)/2);
+    uvs.push(0.5 + Math.cos(angle)/2 , 0.5 + Math.sin(angle)/2);
     
     //Indici
     indices.push(BASE_OFFSET); //centro della base
@@ -494,31 +496,30 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 function initVertexBuffersSphere(gl) { // Create a sphere
   var r = 1.2;
-  var n = 100;
+  var n = 70;
 
-  var angleStep = Math.PI / n;
   var points = [];
   var uvs = [];
   var indices = [];
-  var x,y,z;
   
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * Math.PI/n;
+    var angleXY = i * 2*Math.PI/n;
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
+    
     for (var j = 0; j <= n; j++) { //rotazione Z
-      var angleZ = j * angleStep; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+      var angleZ = j * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
       //Vertici
-      x = r * cosXY * sinZ;
-      z = r * sinXY * sinZ;
-      y = r * cosZ; //scambio y e z per tenere i poli in verticale
-      points.push(x,y,z)
+      var x = r * cosXY * sinZ;
+      var z = r * sinXY * sinZ;
+      var y = r * cosZ; //scambio y e z per tenere i poli in verticale
+      points.push(x, y, z);
 
       //Texture
-      //campiono da 1 a 0 per disegnare la texture nel verso giusto
+      //campiono da 1 a 0, invece che da 0 a 1, per disegnare la texture nel verso giusto
       var u = 1-i/n;
       var v = 1-j/n;
       uvs.push(u, v);
@@ -565,8 +566,6 @@ function initVertexBuffersTorus(gl) { // Create a torus
   var points = [];
   var uvs = [];
   var indices = [];
-  var x,y,z;
-  
 
   for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
     var angleTHETA = i * angleStep;
@@ -578,9 +577,9 @@ function initVertexBuffersTorus(gl) { // Create a torus
       var cosPHI = Math.cos(anglePHI);
 
       //Vertici
-      x = (Rhole + r * cosPHI) * cosTHETA;
-      y = (Rhole + r * cosPHI) * sinTHETA;
-      z = r * sinPHI;
+      var x = (Rhole + r * cosPHI) * cosTHETA;
+      var y = (Rhole + r * cosPHI) * sinTHETA;
+      var z = r * sinPHI;
       points.push(x,y,z);
 
       //Texture
@@ -645,7 +644,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
 }
 
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 80.0;
+var ANGLE_STEP = 60.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {

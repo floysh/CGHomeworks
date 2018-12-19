@@ -5,34 +5,85 @@
 "use strict";
 
 // Vertex shader program
-var VSHADER_SOURCE;
-// Fragment shader program
-var FSHADER_SOURCE;
+var VSHADER_SOURCE = 
+'attribute vec4 a_Position;\n'	+
+'attribute vec4 a_Normal;\n'	+
+'attribute vec2 a_TexCoord;\n'	+
+'\n'	+
+'uniform mat4 u_ModelMatrix;    // Model matrix\n'	+
+'uniform mat4 u_MvpMatrix;      // Model-view-projection matrix\n'	+
+'uniform mat4 u_NormalMatrix;   // Transformation matrix of the normal\n'	+
+'uniform vec3 u_LightColor;     // Light color\n'	+
+'uniform vec3 u_LightPosition;  // Position of the light source\n'	+
+'uniform vec3 u_DiffuseMat;     // Diffuse material color\n'	+
+'\n'	+
+'varying vec4 vertexPosition;\n'	+
+'varying vec3 v_normal;\n'	+
+'varying vec2 v_TexCoord;\n'	+
+'\n'	+
+'varying vec3 v_LightColor;     // Light color\n'	+
+'varying vec3 v_LightPosition;  // Position of the light source\n'	+
+'//varying vec3 v_DiffuseMat;     // Diffuse material color\n'	+
+'varying vec3 v_CameraPos;      // Camera Position\n'	+
+'\n'	+
+'void main() {             \n'	+
+'    gl_Position = u_MvpMatrix * a_Position;\n'	+
+'    v_TexCoord = a_TexCoord;\n'	+
+'\n'	+
+'    // Calculate world coordinate of vertex\n'	+
+'    vertexPosition = u_ModelMatrix * a_Position;\n'	+
+'    \n'	+
+'    // Calculate a normal to be fit with a model matrix, and make it 1.0 in length\n'	+
+'    v_normal = normalize(vec3(u_NormalMatrix * a_Normal));\n'	+
+'\n'	+
+'    //Per-Fragment Lighting\n'	+
+'    //Make data accessible from the fragment shader\n'	+
+'    v_LightColor = u_LightColor;\n'	+
+'    v_LightPosition = u_LightPosition;\n'	+
+'    //v_DiffuseMat = u_DiffuseMat;\n'	+
+'}';
 
-function loadShaderFromFile(filePath) { //Requires an HTTP server running
-    var xmlhttp;
-    xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET",filePath,false);
-    xmlhttp.send(null);
-    var fileContent = xmlhttp.responseText;
-    
- 
-/*    //print the GLSL file as string to embedd into a javascript source
-    var fileArray = fileContent.split('\n');
-    var SHADER_SOURCE = "";
-    for (var i in fileArray) VSHADER_SOURCE = VSHADER_SOURCE + "'"+fileArray[i]+"'\t+\n";
-    VSHADER_SOURCE = VSHADER_SOURCE + ";";
-    console.log(VSHADER_SOURCE);  */
- 
- 
-    return fileContent;
-}
+// Fragment shader program
+var FSHADER_SOURCE = 
+'#ifdef GL_ES\n'	+
+'precision mediump float;\n'	+
+'#endif\n'	+
+'\n'	+
+'uniform sampler2D u_Sampler;\n'	+
+'varying vec2 v_TexCoord;\n'	+
+'\n'	+
+'varying vec4 vertexPosition;\n'	+
+'varying vec3 v_normal;\n'	+
+'\n'	+
+'varying vec3 v_LightColor;     // Light color\n'	+
+'varying vec3 v_LightPosition;  // Position of the light source\n'	+
+'//varying vec3 v_DiffuseMat;     // Diffuse material color\n'	+
+'\n'	+
+'void main() {\n'	+
+'    //Apply Texture\n'	+
+'    vec4 texture = texture2D(u_Sampler, v_TexCoord);\n'	+
+'\n'	+
+'    //Apply Lighting per-fragment\n'	+
+'\n'	+
+'    float d = length(v_LightPosition - vec3(vertexPosition)); \n'	+
+'    float atten = 1.0/(0.01 * d*d); \n'	+
+'    // Calculate the light direction and make it 1.0 in length\n'	+
+'    vec3 lightDirection = normalize(v_LightPosition - vec3(vertexPosition));\n'	+
+'    // The dot product of the light direction and the normal\n'	+
+'    float nDotL = max(dot(lightDirection, v_normal), 0.0);\n'	+
+'\n'	+
+'    // Calculate the color due to diffuse reflection\n'	+
+'    vec3 kD = texture.rgb; //use texture color as DiffuseMaterial\n'	+
+'    vec3 diffuse = v_LightColor * kD * nDotL;\n'	+
+'\n'	+
+'    // Add the surface colors due to diffuse reflection and texture as a material\n'	+
+'    gl_FragColor = vec4(diffuse, 1.0); \n'	+
+'}';
 
 function main() {
   // Retrieve <canvas> element
   var canvas = document.getElementById('webgl');
 
-  
    //Estende la canvas per occupare più spazio possibile
    canvas.width = window.innerWidth;
    canvas.height = window.innerHeight;
@@ -59,6 +110,7 @@ function main() {
    };
    window.addEventListener('load', resize, false);
    window.addEventListener('resize', resize, false);
+
   // Get the rendering context for WebGL
    var gl = getWebGLContext(canvas);
    if (!gl) {
@@ -67,10 +119,8 @@ function main() {
    }
   
   // Initialize shaders
-  /* VSHADER_SOURCE = loadShaderFromFile("shaders/phong_vertex.glsl");
-  FSHADER_SOURCE = loadShaderFromFile("shaders/phong_fragment.glsl"); */
-  VSHADER_SOURCE = loadShaderFromFile("shaders/HW3_vertex.glsl");
-  FSHADER_SOURCE = loadShaderFromFile("shaders/HW3_fragment.glsl");
+  //VSHADER_SOURCE = loadShaderFromFile("shaders/HW3_vertex.glsl");
+  //FSHADER_SOURCE = loadShaderFromFile("shaders/HW3_fragment.glsl");
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     console.log('Failed to intialize shaders.');
     return;
@@ -243,7 +293,7 @@ function main() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
 
     // Calculate the MODEL MATRIX
-    modelMatrix.setRotate(currentAngle, 1, 0, 0); // Rotate around the y-axis
+    modelMatrix.setRotate(currentAngle, 1, 1, 0); // Rotate around the y-axis
     // Pass the model matrix to u_ModelMatrix
     gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
     
@@ -341,15 +391,14 @@ function initVertexBuffersCube(gl) {
 }
 
 
-
 function initVertexBuffersCone(gl) { // Create a cone
   var r = 1.2;
   var h = 2.4;
   var n = 100;
 
   var angleStep = 2* Math.PI / n;
-  var p = [r, -1.0, 0.0];
-  var spike = [0.0, h-p[1], 0.0]; //asse cono = asse y
+  var base_y = -1.0; //distanza della base dall'origine
+  var spike = [0.0, base_y+h, 0.0]; //asse cono = asse y
   
   var points = [];
   var uvs = [];
@@ -364,21 +413,20 @@ function initVertexBuffersCone(gl) { // Create a cone
 
     //Coordinate
     var x = r * Math.sin(angle);
-    var y = p[1];
-    var z = r * Math.cos(angle);    
+    var y = base_y;
+    var z = r * Math.cos(angle);
     points.push(x, y, z);
-    points.push(spike[0], spike[1]-2, spike[2]);
+    points.push(spike[0], spike[1], spike[2]);
     
     //Texture
     uvs.push(i/n, 0);
     uvs.push(i/n, 1);
 
-
     //Normali
     var alpha = Math.atan(h/r); //angolo formato dal lato col raggio della base
-    var b = Math.sin(alpha);    //base del triangolo formato da normale e raggio della base
+    var b = Math.sin(alpha);    //base del triangolo formato da normale e dalle sue proiezioni su XZ
     x = b * Math.sin(angle);
-    y = Math.cos(alpha); //se alpha = PI/2 -> cilindro -> y = 0;
+    y = Math.cos(alpha);        //se alpha = PI/2 -> cilindro -> y = 0;
     z = b * Math.cos(angle);
 
     normals.push(x, y, z);
@@ -389,13 +437,12 @@ function initVertexBuffersCone(gl) { // Create a cone
   }
   indices[indices.length-1] = 0; //collega l'ultimo triangolo con il primo
 
-
   //BASE
   //bisogna replicare i punti perchè le uv della base sono diverse da quelle nella sup. laterale
   var BASE_OFFSET = n*2+2;
 
   //inserisco centro
-  points.push(spike[0], p[1], spike[2]);
+  points.push(spike[0], base_y, spike[2]);
   uvs.push(0.5, 0.5);
   normals.push(0, -1, 0);
 
@@ -405,7 +452,7 @@ function initVertexBuffersCone(gl) { // Create a cone
 
     //Coordinate
     var x = r * Math.cos(angle);
-    var y = p[1];
+    var y = base_y;
     var z = r * Math.sin(angle);
     points.push(x, y, z);
 
@@ -444,6 +491,7 @@ function initVertexBuffersCone(gl) { // Create a cone
   return indices.length;
 }
 
+
 function initVertexBuffersCylinder(gl) { // Create a cylinder
   var n = 170;
   var r = 1.0;
@@ -470,7 +518,7 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 	  vertices.push(bc[0] + r * Math.cos(angle), bc[1], bc[0] + r * Math.sin(angle));
     normals.push(0.0, -1.0, 0.0);
-    uvs.push(0.5 + Math.cos(angle)/2, 0.5 + Math.sin(angle)/2);
+    uvs.push(0.5 - Math.cos(angle)/2, 0.5 - Math.sin(angle)/2);
 	} //ora ci sono 1 + n+1 = n+2 vertici
   
   //Base SUPERIORE
@@ -541,21 +589,21 @@ function initVertexBuffersCylinder(gl) { // Create a cylinder
 
 
 function initVertexBuffersSphere(gl) { // Create a sphere
-  var r = 1.5;
+  var r = 1.2;
   var n = 70;
 
-  var angleStep = Math.PI / n;
   var points = [];
   var normals = [];
   var uvs = [];
   var indices = [];
   
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * 2*angleStep
+    var angleXY = i * 2*Math.PI/n;
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
+    
     for (var j = 0; j <= n; j++) { //rotazione Z
-      var angleZ = j * angleStep; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+      var angleZ = j * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
@@ -563,7 +611,7 @@ function initVertexBuffersSphere(gl) { // Create a sphere
       var x = r * cosXY * sinZ;
       var z = r * sinXY * sinZ;
       var y = r * cosZ; //scambio y e z per tenere i poli in verticale
-      points.push(x, y, z)
+      points.push(x, y, z);
 
       //Normali
       //le normali ai pti hanno la stessa direzione del raggio, ma modulo unitario
@@ -576,11 +624,14 @@ function initVertexBuffersSphere(gl) { // Create a sphere
       normals.push(x/r, y/r, z/r);
     
       //Texture
-      uvs.push(1-i/n, 1-j/n); //Inverto le coordinate per mantenere "dritta" la texture sulla sup. esterna
+      //campiono da 1 a 0, invece che da 0 a 1, per disegnare la texture nel verso giusto
+      var u = 1-i/n;
+      var v = 1-j/n;
+      uvs.push(u, v);
 
       //Indici
       var p1 = i * (n+1) + j; //i*(n) è il primo pto dello strato i-esimo. +j per iterare su tutti i pti di quello strato
-      var p2 = p1 + (n+1);  //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
+      var p2 = p1 + (n+1); //pto sopra a p1 = pto in posizione analoga a p1 nello strato successivo
 
       //indices.push(i*n+j) //test punti
       if (i < n && j < n) { //mi fermo prima altrimenti drawElements va fuori dal buffer
@@ -591,7 +642,7 @@ function initVertexBuffersSphere(gl) { // Create a sphere
   }
 
   //SEND DATA TO SHADERS
-  // Write the vertex property to buffers (coordinates and normals)
+  // Write the vertex property to buffers (coordinates, normals and uvs)
   // Same data can be used for vertex and normal
   // In order to make it intelligible, another buffer is prepared separately
   if (!initArrayBuffer(gl, 'a_Position', new Float32Array(points), gl.FLOAT, 3)) return -1;
@@ -625,16 +676,10 @@ function initVertexBuffersTorus(gl) { // Create a torus
   var uvs = [];
   var indices = [];
   
-  var p = [Rhole+r, 0, 0];
   for (var i = 0; i <= n; i++) { //rotazione del cerchio intorno al buco
     var angleTHETA = i * angleStep;
     var sinTHETA = Math.sin(angleTHETA);
     var cosTHETA = Math.cos(angleTHETA);
-    
-    //centro del cerchio (per le normali)
-    var cx = p[0] *Math.cos(angleTHETA) - p[2] *Math.sin(angleTHETA);
-    var cy = p[1];
-    var cz = p[0] *Math.sin(angleTHETA) + p[2] *Math.cos(angleTHETA);
 
     for (var j = 0; j <= n; j++) { //rotazione pti sull'anello
       var anglePHI = j * angleStep;
@@ -646,21 +691,19 @@ function initVertexBuffersTorus(gl) { // Create a torus
       var y = (Rhole + r * cosPHI) * sinTHETA;
       var z = r * sinPHI;
       points.push(x,y,z);
-      //points.push(x-cx,y-cy,z-cz); //ehm figura strana :/
       
       //Normali
       
-      // Alternativa casalinga al metodo delle derivate parziali alle eq parametriche
-      // Idea originale: https://www.gamedev.net/forums/topic/437251-calculate-surface-normal-vector/ (Zipster, 3o post)
+      // Alternativa al metodo delle derivate parziali delle eq parametriche
+      // Idea originale: https://www.gamedev.net/forums/topic/437251-calculate-surface-normal-vector/ (3o post)
       // Possiamo visualizzare le normali a una superficie toroidale come un toro con raggio dell'anello = 1
       // Il loro orientamento nello spazio non cambia al variare del raggio del buco, perciò
       // se le applichiamo tutte all'origine esse descrivono una sfera unitaria (in realtà, due sfere sovrapposte)
-      // Possiamo quindi usare l'equazione parametrica della sfera per trovarle.
-      // Inoltre fissando r=1.0 evitiamo di dover normalizzare il vettore risultante
+      // Possiamo quindi usare l'equazione parametrica della sfera per trovarle, fissando r = 1.
       x = (1.0 * cosPHI) * cosTHETA; //metto r = 1.0 per rendere più chiara la formula
       y = (1.0 * cosPHI) * sinTHETA;
       z = 1.0 * sinPHI;
-      //var norm2 = Math.sqrt(x*x + y*y + z*z); //se r=1, non serve la normalizzazione
+      //var norm2 = Math.sqrt(x*x + y*y + z*z); //se r=1, non serve normalizzare
       //normals.push(x/norm2, y/norm2, z/norm2);
       normals.push(x, y, z);
 
@@ -726,7 +769,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
   return true;
 }
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 80.0;
+var ANGLE_STEP = 60.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
@@ -760,8 +803,7 @@ function initTextures(gl) {
   // Register the event handler to be called on loading an image
   image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
   // Tell the browser to load an image
-  image.src = './textures/03a.jpg';
-  image.src = './textures/lightingtest.png';
+  //image.src = './textures/lightingtest.png'; //TEST
   image.src = './textures/ash_uvgrid01.jpg';
   
   return true;
@@ -783,4 +825,24 @@ function loadTexture(gl, texture, u_Sampler, image) {
   gl.uniform1i(u_Sampler, 0);
   
   gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
+}
+
+
+function loadShaderFromFile(filePath) { //Requires an HTTP server running
+  var xmlhttp;
+  xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("GET",filePath,false);
+  xmlhttp.send(null);
+  var fileContent = xmlhttp.responseText;
+  
+
+  //print the GLSL file as string to embedd into a javascript source
+  /* var fileArray = fileContent.split('\n');
+  var SHADER_SOURCE = "";
+  for (var i in fileArray) VSHADER_SOURCE = VSHADER_SOURCE + "'"+fileArray[i]+"\\n'\t+\n";
+  VSHADER_SOURCE = VSHADER_SOURCE + ";";
+  console.log(VSHADER_SOURCE); */
+
+
+  return fileContent;
 }

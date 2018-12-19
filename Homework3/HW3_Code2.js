@@ -148,18 +148,18 @@ function initVertexBuffersSemiSphere(gl) { // Create a semisphere
   var r = 1.2;
   var n = 70;
 
-  var angleStep = Math.PI / n;
   var points = [];
   var uvs = [];
   var indices = [];
   var x,y,z;
   
   for (var i = 0; i <= n; i++) { //rotazione XY
-    var angleXY = i * Math.PI/n; //con 2*PI/n disegna due diagonali nelle facce perchè il cerchio ruota attorno al diametro
+    var angleXY = i * Math.PI/n; //Limito la rotazione XY  tra 0 e PI per disegnare metà sfera
     var sinXY = Math.sin(angleXY);
     var cosXY = Math.cos(angleXY);
+    
     for (var j = 0; j <= n; j++) { //rotazione Z
-      var angleZ = j * angleStep;
+      var angleZ = j * Math.PI/n;
       var sinZ = Math.sin(angleZ);
       var cosZ = Math.cos(angleZ);
 
@@ -170,7 +170,8 @@ function initVertexBuffersSemiSphere(gl) { // Create a semisphere
       points.push(x,y,z)
 
       //Texture
-      //Indici u invertiti rispetto alla sfera completa per "ribaltare" la texture in orizzontale
+      //Coordinate u invertite rispetto alla sfera completa per "ribaltare" la texture in orizzontale
+      //e disegnarla correttamente nel lato interno della figura
       uvs.push(i/n, 1-j/n);
 
       //Indici
@@ -230,7 +231,7 @@ function initArrayBuffer(gl, attribute, data, type, num) {
   return true;
 }
 // Rotation angle (degrees/second)
-var ANGLE_STEP = 80.0;
+var ANGLE_STEP = 60.0;
 // Last time that this function was called
 var g_last = Date.now();
 function animate(angle) {
@@ -264,8 +265,7 @@ function initTextures(gl) {
   // Register the event handler to be called on loading an image
   image.onload = function(){ loadTexture(gl, texture, u_Sampler, image); };
   // Tell the browser to load an image
-  image.src = './textures/ash_uvgrid01.jpg'; //TEST
-  image.src = './textures/02a.jpg'; //non funzia :(
+  //image.src = './textures/ash_uvgrid01.jpg'; //TEST
   image.src = './textures/03a.jpg';
   
   return true;
